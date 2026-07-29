@@ -238,7 +238,7 @@ export default function PayoutCalculator() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200/60">
             <div>
               <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
-                Final Payout Share
+                Final Productive Hours
               </div>
               <div className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
                 {result.formatted?.displayFormatted}
