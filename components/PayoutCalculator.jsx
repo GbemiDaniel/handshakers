@@ -100,11 +100,10 @@ export default function PayoutCalculator() {
     const formattedResult = minutesToHHMM(finalPayoutMinutes);
 
     // 4. Calculate decimal hours for display outputs: (Total Minutes / 60).toFixed(2)
-    const finalDecimalHours = (finalPayoutMinutes / 60).toFixed(2);
-    const myDecimalHours = (myMinutes / 60).toFixed(2);
-    const teamDecimalHours = (teamMinutes / 60).toFixed(2);
-    const platformDecimalHours = (platformMinutes / 60).toFixed(2);
-    const sharePercentage = ((myMinutes / teamMinutes) * 100).toFixed(2);
+    const finalDecimalHours = (finalPayoutMinutes / 60).toFixed(3);
+    const myDecimalHours = (myMinutes / 60).toFixed(3);
+    const teamDecimalHours = (teamMinutes / 60).toFixed(3);
+    const platformDecimalHours = (platformMinutes / 60).toFixed(3); const sharePercentage = ((myMinutes / teamMinutes) * 100).toFixed(2);
 
     setResult({
       myMinutes,
