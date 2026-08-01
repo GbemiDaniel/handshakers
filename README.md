@@ -1,4 +1,24 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Handshakers
+
+Handshakers is a real-time, team-wide time tracking and payout calculation platform built with Next.js and Supabase. It solves the chaos of multi-user time logging by introducing live presence, strict timeline tracking, and collision prevention.
+
+## Features
+
+- **Live Presence & Collision Warning:** Powered by Supabase Realtime Presence. You can instantly see who is currently typing or logging time to avoid overlapping entries.
+- **Strict Timeline Validation:** Validates new entries against the global timeline. Time travel and pool cap limits (up to 80 hours) are strictly enforced.
+- **Real-time Synchronization (SWR):** Implements `useSWR` with active background polling (`refreshWhenHidden: true`, `dedupingInterval: 0`) ensuring all clients stay perfectly in sync without manual refreshes.
+- **Precision Payout Calculator:** Computes exact prorated decimal hours (rounded perfectly to 3 decimal places) across the entire team based on the client's approved platform pool.
+- **Detailed Clipboard Exports:** Instantly copies strict, perfectly aligned daily breakdowns and total payouts to your clipboard for invoicing and sharing. 
+- **Admin Rollbacks:** Allows authorized administrators to seamlessly roll back mistaken final entries on the global timeline.
+- **Global Sonner Toasts:** Clean, non-intrusive global toast notifications replace native browser alerts and inline UI errors for a superior user experience.
+
+## Tech Stack
+
+- **Framework:** Next.js 16 (App Router) / React 19
+- **Backend & Database:** Supabase (PostgreSQL, Realtime, Presence)
+- **Styling:** Tailwind CSS
+- **Data Fetching:** SWR
+- **UI Components & Icons:** Lucide-React, Sonner (for Toasts)
 
 ## Getting Started
 
@@ -16,21 +36,15 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Configuration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Make sure your Supabase instance is properly configured with the following tables:
+- `time_logs`
+- `profiles`
+- `team_settings`
+- Enable Supabase Realtime on the `time_logs` table.
 
-## Learn More
+## Commands
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `npm run dev`: Starts the local development server.
+- `npm run lint`: Runs ESLint for code quality checks.

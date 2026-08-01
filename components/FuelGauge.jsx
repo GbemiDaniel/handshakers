@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/utils/supabase";
+import React, { useState, useEffect } from "react";
+import { useLatestGlobalStop } from "@/hooks/useLatestGlobalStop";
 import { Gauge, Sparkles, RefreshCw } from "lucide-react";
 
 /**
@@ -24,48 +24,24 @@ function minutesToHHMMDisplay(totalMinutes) {
 }
 
 export default function FuelGauge() {
-  const [consumedMinutes, setConsumedMinutes] = useState(0);
   const [animatedPercent, setAnimatedPercent] = useState(0);
-  const [fetching, setFetching] = useState(true);
 
   const MAX_POOL_MINUTES = 4800; // 80 hours strictly
 
-  const fetchPoolUsage = useCallback(async () => {
-    setFetching(true);
-    try {
-      const { data, error } = await supabase
-        .from("time_logs")
-        .select("stop_minutes")
-        .order("stop_minutes", { ascending: false })
-        .limit(1);
-
-      if (error) {
-        console.error("Error fetching pool usage for FuelGauge:", error.message);
-      }
-
-      if (data && data.length > 0 && data[0].stop_minutes !== undefined) {
-        const highestStop = data[0].stop_minutes;
-        setConsumedMinutes(highestStop);
-      } else {
-        setConsumedMinutes(0);
-      }
-    } catch (err) {
-      console.error("Unexpected error fetching pool usage:", err);
-    } finally {
-      setFetching(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchPoolUsage();
-  }, [fetchPoolUsage]);
+  // Shared SWR hook: auto-polls the latest global stop_minutes every 2s.
+  // Shared cache key with TaskLogger — when TaskLogger mutates after insert,
+  // FuelGauge automatically receives the updated value.
+  const {
+    data: consumedMinutes = 0,
+    isLoading: fetching,
+    mutate: refreshPool,
+  } = useLatestGlobalStop();
 
   // Trigger smooth transition animation on mount or data fetch
   useEffect(() => {
     const rawPercent = (consumedMinutes / MAX_POOL_MINUTES) * 100;
     const cappedPercent = Math.min(Math.max(rawPercent, 0), 100);
 
-    // Timeout to allow DOM mount before setting width for CSS transition
     const timer = setTimeout(() => {
       setAnimatedPercent(cappedPercent);
     }, 100);
@@ -74,9 +50,6 @@ export default function FuelGauge() {
   }, [consumedMinutes]);
 
   // Dynamic Color Logic
-  // < 90%: blue-600
-  // >= 90% and < 100%: amber-500
-  // >= 100%: red-500
   let fillColorClass = "bg-blue-600";
   let badgeColorClass = "bg-blue-50 border-blue-100 text-blue-600";
 
@@ -101,7 +74,7 @@ export default function FuelGauge() {
           </span>
           <button
             type="button"
-            onClick={fetchPoolUsage}
+            onClick={() => refreshPool()}
             disabled={fetching}
             className="text-slate-400 hover:text-slate-600 transition-colors p-0.5 rounded hover:bg-slate-100 disabled:opacity-50 ml-1"
             title="Refresh Pool Meter"

@@ -1,0 +1,348 @@
+/**
+ * Cross-Account Sync Regression Tests
+ *
+ * These tests verify that the fixes for cross-account real-time sync
+ * are correctly implemented and prevent the bug from resurfacing.
+ *
+ * Bug Summary:
+ *   SWR's default dedupingInterval (2000ms) matched the refreshInterval (2000ms),
+ *   causing the fetcher to be silently skipped on consecutive poll cycles.
+ *   Additionally, TaskLogger and FuelGauge had no cross-account refresh mechanism.
+ */
+
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { renderHook, waitFor, act } from "@testing-library/react";
+import React from "react";
+import { SWRConfig } from "swr";
+import useSWR from "swr";
+
+// ---------------------------------------------------------------------------
+// Mock Supabase — chained builder pattern (vi.mock is hoisted by vitest)
+// ---------------------------------------------------------------------------
+const mockLimit = vi.fn();
+const mockOrder = vi.fn(() => ({ limit: mockLimit }));
+const mockSelect = vi.fn(() => ({ order: mockOrder }));
+const mockLte = vi.fn();
+const mockFrom = vi.fn(() => ({
+  select: mockSelect,
+  order: mockOrder,
+  limit: mockLimit,
+  lte: mockLte,
+}));
+
+vi.mock("@/utils/supabase", () => ({
+  supabase: {
+    from: (...args) => mockFrom(...args),
+  },
+}));
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function resetMocks(stopMinutes = 500) {
+  vi.clearAllMocks();
+  // Re-build the chain so each mock returns the next step
+  mockSelect.mockReturnValue({ order: mockOrder, lte: mockLte });
+  mockOrder.mockReturnValue({ limit: mockLimit });
+  mockLimit.mockResolvedValue({
+    data: stopMinutes !== null ? [{ stop_minutes: stopMinutes }] : [],
+    error: null,
+  });
+  mockFrom.mockReturnValue({
+    select: mockSelect,
+    order: mockOrder,
+    limit: mockLimit,
+    lte: mockLte,
+  });
+}
+
+/** Wrapper that provides a fresh SWR cache with our production config */
+function createTestWrapper(swrOverrides = {}) {
+  return function TestWrapper({ children }) {
+    return React.createElement(
+      SWRConfig,
+      {
+        value: {
+          dedupingInterval: 0,
+          refreshWhenHidden: true,
+          provider: () => new Map(), // Isolate cache per test
+          ...swrOverrides,
+        },
+      },
+      children
+    );
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Test Suite 1: latestGlobalStopFetcher (unit)
+// ---------------------------------------------------------------------------
+describe("latestGlobalStopFetcher", () => {
+  let latestGlobalStopFetcher;
+
+  beforeEach(async () => {
+    resetMocks(500);
+    const mod = await import("@/hooks/useLatestGlobalStop");
+    latestGlobalStopFetcher = mod.latestGlobalStopFetcher;
+  });
+
+  it("returns the highest stop_minutes from time_logs", async () => {
+    const result = await latestGlobalStopFetcher();
+    expect(result).toBe(500);
+  });
+
+  it("returns 0 when no time logs exist", async () => {
+    mockLimit.mockResolvedValueOnce({ data: [], error: null });
+    const result = await latestGlobalStopFetcher();
+    expect(result).toBe(0);
+  });
+
+  it("returns 0 when data is null", async () => {
+    mockLimit.mockResolvedValueOnce({ data: null, error: null });
+    const result = await latestGlobalStopFetcher();
+    expect(result).toBe(0);
+  });
+
+  it("throws on Supabase error so SWR can handle retries", async () => {
+    mockLimit.mockResolvedValueOnce({
+      data: null,
+      error: { message: "Database connection failed" },
+    });
+    await expect(latestGlobalStopFetcher()).rejects.toThrow();
+  });
+
+  it("queries the time_logs table", async () => {
+    await latestGlobalStopFetcher();
+    expect(mockFrom).toHaveBeenCalledWith("time_logs");
+  });
+
+  it("selects stop_minutes column", async () => {
+    await latestGlobalStopFetcher();
+    expect(mockSelect).toHaveBeenCalledWith("stop_minutes");
+  });
+
+  it("orders descending and limits to 1", async () => {
+    await latestGlobalStopFetcher();
+    expect(mockOrder).toHaveBeenCalledWith("stop_minutes", {
+      ascending: false,
+    });
+    expect(mockLimit).toHaveBeenCalledWith(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Test Suite 2: useLatestGlobalStop hook (integration)
+// ---------------------------------------------------------------------------
+describe("useLatestGlobalStop hook", () => {
+  let useLatestGlobalStop;
+
+  beforeEach(async () => {
+    resetMocks(750);
+    const mod = await import("@/hooks/useLatestGlobalStop");
+    useLatestGlobalStop = mod.useLatestGlobalStop;
+  });
+
+  it("returns fetched data through SWR", async () => {
+    const wrapper = createTestWrapper();
+    const { result } = renderHook(() => useLatestGlobalStop(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.data).toBe(750);
+    });
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  it("returns 0 default when destructured before data loads", () => {
+    const wrapper = createTestWrapper();
+    const { result } = renderHook(
+      () => {
+        const { data = 0 } = useLatestGlobalStop();
+        return data;
+      },
+      { wrapper }
+    );
+
+    // On first synchronous render, before fetch resolves
+    // The default destructuring should provide 0
+    expect(typeof result.current).toBe("number");
+  });
+
+  it("exposes a mutate function for immediate cache updates", async () => {
+    const wrapper = createTestWrapper();
+    const { result } = renderHook(() => useLatestGlobalStop(), { wrapper });
+
+    await waitFor(() => expect(result.current.data).toBe(750));
+
+    // Optimistic update (simulates collision handler in TaskLogger)
+    await act(async () => {
+      await result.current.mutate(999, { revalidate: false });
+    });
+
+    expect(result.current.data).toBe(999);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Test Suite 3: SWR Polling with dedupingInterval: 0
+// ---------------------------------------------------------------------------
+describe("SWR Polling: dedupingInterval fix", () => {
+  it("FIX: fetcher is invoked on every poll with dedupingInterval: 0", async () => {
+    const fetcher = vi.fn().mockResolvedValue(42);
+    const wrapper = createTestWrapper({ dedupingInterval: 0 });
+
+    renderHook(
+      () => useSWR("poll-fix-test", fetcher, { refreshInterval: 500 }),
+      { wrapper }
+    );
+
+    // Initial fetch
+    await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1));
+
+    // Wait for at least 2 more poll cycles (500ms each + buffer)
+    await waitFor(
+      () => {
+        expect(fetcher.mock.calls.length).toBeGreaterThanOrEqual(3);
+      },
+      { timeout: 3000 }
+    );
+  }, 5000);
+
+  it("FIX: data updates are picked up across poll cycles", async () => {
+    let callCount = 0;
+    const fetcher = vi.fn(() => {
+      callCount++;
+      return Promise.resolve(callCount * 100);
+    });
+
+    const wrapper = createTestWrapper({ dedupingInterval: 0 });
+
+    const { result } = renderHook(
+      () => useSWR("poll-data-test", fetcher, { refreshInterval: 500 }),
+      { wrapper }
+    );
+
+    // Initial value
+    await waitFor(() => expect(result.current.data).toBe(100));
+
+    // After polling, value should increase (proves fetcher re-fired)
+    await waitFor(
+      () => {
+        expect(result.current.data).toBeGreaterThan(100);
+      },
+      { timeout: 3000 }
+    );
+  }, 5000);
+});
+
+// ---------------------------------------------------------------------------
+// Test Suite 4: DailyLogs fetcher — no cacheBustTime (.lte filter removed)
+// ---------------------------------------------------------------------------
+describe("DailyLogs fetcher: cacheBustTime removal", () => {
+  it("time_logs query does NOT use .lte() filter (regression guard)", async () => {
+    // Read the DailyLogs source file and verify .lte is not chained
+    // onto the time_logs query. This is a static analysis test.
+    const fs = await import("fs");
+    const path = await import("path");
+    const filePath = path.default.resolve("components/DailyLogs.jsx");
+    const source = fs.default.readFileSync(filePath, "utf-8");
+
+    // Extract the fetcher function body
+    const fetcherMatch = source.match(
+      /const fetcher\s*=\s*async\s*\(\)\s*=>\s*\{([\s\S]*?)\n\};/
+    );
+    expect(fetcherMatch).not.toBeNull();
+
+    const fetcherBody = fetcherMatch[1];
+
+    // Verify .lte() is NOT called in the fetcher
+    expect(fetcherBody).not.toContain(".lte(");
+
+    // Verify cacheBustTime variable is NOT present
+    expect(fetcherBody).not.toContain("cacheBustTime");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Test Suite 5: Providers component — global SWR config validation
+// ---------------------------------------------------------------------------
+describe("Providers: Global SWR Config", () => {
+  it("configures dedupingInterval: 0 (verified via source)", async () => {
+    const fs = await import("fs");
+    const path = await import("path");
+    const filePath = path.default.resolve("app/providers.jsx");
+    const source = fs.default.readFileSync(filePath, "utf-8");
+
+    expect(source).toContain("dedupingInterval: 0");
+    expect(source).toContain("refreshWhenHidden: true");
+  });
+
+  it("is imported and used in layout.jsx", async () => {
+    const fs = await import("fs");
+    const path = await import("path");
+    const filePath = path.default.resolve("app/layout.jsx");
+    const source = fs.default.readFileSync(filePath, "utf-8");
+
+    expect(source).toContain('import Providers from "./providers"');
+    expect(source).toContain("<Providers>");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Test Suite 6: Shared SWR key — TaskLogger + FuelGauge sync
+// ---------------------------------------------------------------------------
+describe("Shared SWR key: TaskLogger + FuelGauge cross-component sync", () => {
+  it("both components use the same SWR cache key 'latest-global-stop'", async () => {
+    const fs = await import("fs");
+    const path = await import("path");
+
+    const hookSource = fs.default.readFileSync(
+      path.default.resolve("hooks/useLatestGlobalStop.js"),
+      "utf-8"
+    );
+    const taskLoggerSource = fs.default.readFileSync(
+      path.default.resolve("components/TaskLogger.jsx"),
+      "utf-8"
+    );
+    const fuelGaugeSource = fs.default.readFileSync(
+      path.default.resolve("components/FuelGauge.jsx"),
+      "utf-8"
+    );
+
+    // The hook defines the key
+    expect(hookSource).toContain('"latest-global-stop"');
+
+    // Both components import and use the shared hook
+    expect(taskLoggerSource).toContain("useLatestGlobalStop");
+    expect(fuelGaugeSource).toContain("useLatestGlobalStop");
+  });
+
+  it("TaskLogger no longer uses one-shot fetchLatestGlobalTime", async () => {
+    const fs = await import("fs");
+    const path = await import("path");
+    const source = fs.default.readFileSync(
+      path.default.resolve("components/TaskLogger.jsx"),
+      "utf-8"
+    );
+
+    // The old one-shot fetch pattern should be completely removed
+    expect(source).not.toContain("fetchLatestGlobalTime");
+    expect(source).not.toContain("setLockedStartMinutes");
+    expect(source).not.toContain("setFetchingLatest");
+  });
+
+  it("FuelGauge no longer uses one-shot fetchPoolUsage", async () => {
+    const fs = await import("fs");
+    const path = await import("path");
+    const source = fs.default.readFileSync(
+      path.default.resolve("components/FuelGauge.jsx"),
+      "utf-8"
+    );
+
+    // The old one-shot fetch pattern should be completely removed
+    expect(source).not.toContain("fetchPoolUsage");
+    expect(source).not.toContain("setConsumedMinutes");
+    expect(source).not.toContain("setFetching");
+    expect(source).not.toContain("refreshKey");
+  });
+});
