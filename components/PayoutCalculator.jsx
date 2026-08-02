@@ -261,7 +261,7 @@ export default function PayoutCalculator({ session }) {
 
   return (
     <BaseCard
-      title="Prorated Payout Calculator"
+      title="Payout Calculator"
       subtitle="Calculate individual payout shares auto-synced with team database logs"
       headerAction={
         <button
@@ -282,9 +282,6 @@ export default function PayoutCalculator({ session }) {
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">
               My Total Logged Time
             </label>
-            <span className="text-[11px] font-medium text-slate-400">
-              {myTotalMinutes} raw mins
-            </span>
           </div>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -309,9 +306,6 @@ export default function PayoutCalculator({ session }) {
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Team Total Logged Time
             </label>
-            <span className="text-[11px] font-medium text-slate-400">
-              {teamTotalMinutes} raw mins
-            </span>
           </div>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">

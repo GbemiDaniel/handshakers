@@ -301,8 +301,8 @@ export default function TaskLogger({ session, onUpdate }) {
 
   return (
     <BaseCard
-      title="Snap-On Task Logger"
-      subtitle="Log continuous team time blocks adhering to the 80-hour cumulative pool"
+      title="Log Team Time"
+      subtitle="Enter your stop time to pass on to the next person. Logged times are auto-synced with the team."
       headerAction={
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-xs font-semibold whitespace-nowrap">
           <Sparkles className="w-3.5 h-3.5 shrink-0" />
@@ -315,11 +315,8 @@ export default function TaskLogger({ session, onUpdate }) {
         <div className="w-full">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1.5">
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Locked Start Time (Snap-on Handoff)
+              LOCKED START TIME
             </label>
-            <span className="text-[11px] font-medium text-slate-400">
-              {lockedStartMinutes} raw mins
-            </span>
           </div>
           <div className="relative w-full">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -344,7 +341,7 @@ export default function TaskLogger({ session, onUpdate }) {
             htmlFor="stopTimeInput"
             className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5"
           >
-            New Stop Time (HH:MM)
+            STOP TIME (HH:MM)
           </label>
           <div className="relative w-full">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -400,7 +397,7 @@ export default function TaskLogger({ session, onUpdate }) {
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
             <>
-              <span>Submit Handoff Log</span>
+              <span>Submit Time</span>
               <ArrowRight className="w-4 h-4" />
             </>
           )}
@@ -420,7 +417,7 @@ export default function TaskLogger({ session, onUpdate }) {
               ) : (
                 <>
                   <Undo2 className="w-3.5 h-3.5" />
-                  <span>Rollback Last Global Entry</span>
+                  <span>Undo Last Entry</span>
                 </>
               )}
             </button>

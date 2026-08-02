@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import BaseCard from "./BaseCard";
 import { supabase } from "@/utils/supabase";
-import { Mail, Lock, LogIn, UserPlus, AlertCircle, CheckCircle2, Loader2, ShieldAlert } from "lucide-react";
+import { Mail, Lock, LogIn, UserPlus, AlertCircle, CheckCircle2, Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function Auth({ onAuthSuccess }) {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -11,17 +11,15 @@ export default function Auth({ onAuthSuccess }) {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
 
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [diagLoading, setDiagLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [diagOutput, setDiagOutput] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setMessage("");
-    setDiagOutput("");
     setLoading(true);
 
     if (!email || !password) {
@@ -127,142 +125,16 @@ export default function Auth({ onAuthSuccess }) {
     }
   };
 
-  // ============================================
-  // DIAGNOSTIC TEST FUNCTION (TEMPORARY)
-  // ============================================
-  const runDiagnostic = async () => {
-    setDiagLoading(true);
-    setError("");
-    setMessage("");
-    setDiagOutput("");
-
-    const diagnosticEmail = "test-diagnostic@example.com";
-    const diagnosticPassword = "DiagTest2026!Secure";
-
-    const lines = [];
-    const log = (msg) => {
-      console.log(msg);
-      lines.push(msg);
-    };
-
-    try {
-      log("=== AUTH DIAGNOSTIC START ===");
-      log(`Timestamp: ${new Date().toISOString()}`);
-      log(`Supabase URL: ${process.env.NEXT_PUBLIC_SUPABASE_URL}`);
-      log(`Anon Key (first 20): ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 20)}`);
-      log(`Origin: ${window.location.origin}`);
-      log(`emailRedirectTo: ${window.location.origin}`);
-      log(`Test email: ${diagnosticEmail}`);
-      log("");
-
-      // Step 1: Test signUp
-      log("--- Step 1: Calling supabase.auth.signUp() ---");
-      const startTime = performance.now();
-
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: diagnosticEmail,
-        password: diagnosticPassword,
-        options: {
-          data: { full_name: "Diagnostic Test User" },
-          emailRedirectTo: `${window.location.origin}`,
-        },
-      });
-
-      const elapsed = (performance.now() - startTime).toFixed(0);
-      log(`Response time: ${elapsed}ms`);
-      log("");
-
-      if (signUpError) {
-        log(`❌ SIGNUP ERROR RETURNED`);
-        log(`   message: ${signUpError.message}`);
-        log(`   status: ${signUpError.status}`);
-        log(`   name: ${signUpError.name}`);
-        log(`   Full: ${JSON.stringify(signUpError, null, 2)}`);
-      } else {
-        log(`✅ No error returned from signUp`);
-      }
-
-      log("");
-      if (data) {
-        log(`--- data.user ---`);
-        if (data.user) {
-          log(`   id: ${data.user.id}`);
-          log(`   email: ${data.user.email}`);
-          log(`   confirmed_at: ${data.user.confirmed_at}`);
-          log(`   email_confirmed_at: ${data.user.email_confirmed_at}`);
-          log(`   created_at: ${data.user.created_at}`);
-          log(`   aud: ${data.user.aud}`);
-          log(`   role: ${data.user.role}`);
-          log(`   identities count: ${data.user.identities?.length}`);
-          if (data.user.identities && data.user.identities.length > 0) {
-            log(`   identities[0].provider: ${data.user.identities[0].provider}`);
-            log(`   identities[0].identity_id: ${data.user.identities[0].identity_id}`);
-          } else {
-            log(`   ⚠️ identities[] is EMPTY — possible ghost/duplicate user`);
-          }
-        } else {
-          log(`   user is NULL`);
-        }
-
-        log("");
-        log(`--- data.session ---`);
-        if (data.session) {
-          log(`   access_token (first 20): ${data.session.access_token?.substring(0, 20)}`);
-          log(`   token_type: ${data.session.token_type}`);
-          log(`   expires_in: ${data.session.expires_in}`);
-        } else {
-          log(`   session is NULL (email confirmation is required before login)`);
-        }
-      } else {
-        log(`   data is NULL`);
-      }
-
-      log("");
-      log("=== AUTH DIAGNOSTIC COMPLETE ===");
-
-      // Step 2: Check Supabase project health via settings endpoint
-      log("");
-      log("--- Step 2: Supabase Project Health Check ---");
-      try {
-        const healthRes = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/settings`, {
-          headers: {
-            apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-          },
-        });
-        const healthStatus = healthRes.status;
-        log(`   /auth/v1/settings HTTP status: ${healthStatus}`);
-        if (healthRes.ok) {
-          const settings = await healthRes.json();
-          log(`   external.email enabled: ${settings?.external?.email}`);
-          log(`   mailer_autoconfirm: ${settings?.mailer_autoconfirm}`);
-          log(`   disable_signup: ${settings?.disable_signup}`);
-          log(`   Full settings: ${JSON.stringify(settings, null, 2)}`);
-        } else {
-          log(`   ⚠️ Could not fetch auth settings (HTTP ${healthStatus})`);
-        }
-      } catch (healthErr) {
-        log(`   ❌ Health check fetch failed: ${healthErr.message}`);
-      }
-
-    } catch (err) {
-      log(`❌ DIAGNOSTIC EXCEPTION: ${err.message}`);
-      log(`   Full: ${JSON.stringify(err, null, 2)}`);
-    } finally {
-      const output = lines.join("\n");
-      setDiagOutput(output);
-      setDiagLoading(false);
-    }
-  };
-
   const toggleMode = () => {
     setIsSignUp(!isSignUp);
     setError("");
     setMessage("");
-    setDiagOutput("");
   };
 
   return (
     <BaseCard
+      className="w-full max-w-sm sm:max-w-md mx-auto"
+      padding="p-4 sm:p-6 sm:p-8"
       title={isSignUp ? "Create Account" : "Welcome Back"}
       subtitle={
         isSignUp
@@ -323,19 +195,26 @@ export default function Auth({ onAuthSuccess }) {
           >
             Password
           </label>
-          <div className="relative">
+          <div className="relative w-full">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
               <Lock className="w-4 h-4" />
             </div>
             <input
               id="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors"
+              className="w-full pl-10 pr-12 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 px-3 sm:px-4 flex items-center justify-center text-slate-400 hover:text-slate-600 focus:outline-none"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
         </div>
 
@@ -403,32 +282,6 @@ export default function Auth({ onAuthSuccess }) {
         </div>
       </form>
 
-      {/* ============================================ */}
-      {/* DIAGNOSTIC SECTION (TEMPORARY — Remove after debugging) */}
-      {/* ============================================ */}
-      <div className="mt-6 pt-4 border-t border-red-200/60 space-y-3">
-        <button
-          type="button"
-          onClick={runDiagnostic}
-          disabled={diagLoading}
-          className="w-full py-2.5 px-4 bg-red-500 hover:bg-red-600 active:bg-red-700 disabled:opacity-60 text-white font-medium rounded-xl shadow-sm transition-all duration-150 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-sm"
-        >
-          {diagLoading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <>
-              <ShieldAlert className="w-4 h-4" />
-              <span>Run Auth Diagnostic</span>
-            </>
-          )}
-        </button>
-
-        {diagOutput && (
-          <div className="bg-slate-900 text-green-400 p-4 rounded-xl text-[11px] font-mono leading-relaxed max-h-80 overflow-y-auto whitespace-pre-wrap border border-slate-700">
-            {diagOutput}
-          </div>
-        )}
-      </div>
     </BaseCard>
   );
 }

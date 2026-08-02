@@ -6,8 +6,9 @@ import PayoutCalculator from "@/components/PayoutCalculator";
 import TaskLogger from "@/components/TaskLogger";
 import FuelGauge from "@/components/FuelGauge";
 import DailyLogs from "@/components/DailyLogs";
+import Header from "@/components/Header";
 import { supabase } from "@/utils/supabase";
-import { Sparkles, LogOut, User, Loader2, Clock, Calculator } from "lucide-react";
+import { Sparkles, Loader2, Clock, Calculator } from "lucide-react";
 
 export default function Home() {
   const [session, setSession] = useState(null);
@@ -86,32 +87,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
       {/* Dashboard Top Header */}
-      <header className="w-full bg-white border-b border-slate-200/80 px-4 py-3 sm:px-8 flex items-center justify-between sticky top-0 z-10 shadow-2xs">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-xs">
-            H
-          </div>
-          <span className="text-base font-semibold text-slate-900 tracking-tight">
-            Handshakers
-          </span>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500 font-medium bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200/60">
-            <User className="w-3.5 h-3.5 text-slate-400" />
-            <span>{session.user?.email}</span>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Sign Out</span>
-          </button>
-        </div>
-      </header>
+      <Header session={session} onSignOut={handleSignOut} />
 
       {/* Main Dashboard Content */}
       <div className="flex-1 px-4 py-8 sm:px-6 lg:px-8 flex flex-col items-center">

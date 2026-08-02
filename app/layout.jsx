@@ -9,8 +9,11 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "Minimalist Light App",
-  description: "A clean, airy, highly readable application using Next.js and Tailwind CSS",
+  title: "Handshakers | Team Time Tracking",
+  description: "Seamlessly track continuous team shifts, manage handoffs, and calculate prorated payouts in real-time.",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({ children }) {
