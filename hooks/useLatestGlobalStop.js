@@ -2,15 +2,15 @@ import useSWR from "swr";
 import { supabase } from "@/utils/supabase";
 
 /**
- * Fetches the highest stop_minutes value across all time_logs.
- * This represents the current position of the team relay timeline.
- *
- * Exported for direct testing.
+ * Fetches the highest stop_minutes value across all time_logs for a specific account.
  */
-export const latestGlobalStopFetcher = async () => {
+export const latestGlobalStopFetcher = async ([_key, accountId]) => {
+  if (!accountId) return 0;
+
   const { data, error } = await supabase
     .from("time_logs")
     .select("stop_minutes")
+    .eq("account_id", accountId)
     .order("stop_minutes", { ascending: false })
     .limit(1);
 
@@ -21,19 +21,13 @@ export const latestGlobalStopFetcher = async () => {
     : 0;
 };
 
-/**
- * Shared SWR hook for the latest global stop time.
- *
- * Used by both TaskLogger (for the locked start time) and FuelGauge
- * (for pool usage). Because both use the same SWR cache key
- * ("latest-global-stop"), when one component mutates, the other
- * automatically receives the updated value — zero prop-drilling needed.
- *
- * Global config (dedupingInterval, refreshWhenHidden) is inherited
- * from the <SWRConfig> provider in app/providers.jsx.
- */
-export function useLatestGlobalStop() {
-  return useSWR("latest-global-stop", latestGlobalStopFetcher, {
-    refreshInterval: 2000,
-  });
+export function useLatestGlobalStop(accountId) {
+  // Use array key to automatically re-fetch when accountId changes
+  return useSWR(
+    accountId ? ["latest-global-stop", accountId] : null,
+    latestGlobalStopFetcher,
+    {
+      refreshInterval: 2000,
+    }
+  );
 }

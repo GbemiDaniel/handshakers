@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useLatestGlobalStop } from "@/hooks/useLatestGlobalStop";
+import { useAccount } from "@/context/AccountContext";
 import { Gauge, Sparkles, RefreshCw } from "lucide-react";
 
 /**
@@ -28,6 +29,8 @@ export default function FuelGauge() {
 
   const MAX_POOL_MINUTES = 4800; // 80 hours strictly
 
+  const { activeAccount } = useAccount();
+
   // Shared SWR hook: auto-polls the latest global stop_minutes every 2s.
   // Shared cache key with TaskLogger — when TaskLogger mutates after insert,
   // FuelGauge automatically receives the updated value.
@@ -35,7 +38,7 @@ export default function FuelGauge() {
     data: consumedMinutes = 0,
     isLoading: fetching,
     mutate: refreshPool,
-  } = useLatestGlobalStop();
+  } = useLatestGlobalStop(activeAccount?.id);
 
   // Trigger smooth transition animation on mount or data fetch
   useEffect(() => {

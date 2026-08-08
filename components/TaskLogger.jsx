@@ -5,6 +5,7 @@ import BaseCard from "./BaseCard";
 import { supabase } from "@/utils/supabase";
 import { useLatestGlobalStop } from "@/hooks/useLatestGlobalStop";
 import { toast } from "sonner";
+import { useAccount } from "@/context/AccountContext";
 import { Clock, Lock, ArrowRight, AlertCircle, CheckCircle2, Loader2, Sparkles, Undo2, AlertTriangle } from "lucide-react";
 
 /**
@@ -41,6 +42,7 @@ export default function TaskLogger({ session, onUpdate }) {
   const [stopTimeInput, setStopTimeInput] = useState("");
   const [isEndOfDay, setIsEndOfDay] = useState(false);
   const [userRole, setUserRole] = useState("member");
+  const { activeAccount } = useAccount();
 
   const [showRollbackModal, setShowRollbackModal] = useState(false);
 
@@ -58,7 +60,7 @@ export default function TaskLogger({ session, onUpdate }) {
     data: lockedStartMinutes = 0,
     mutate: refreshLatestStop,
     isLoading: fetchingLatest,
-  } = useLatestGlobalStop();
+  } = useLatestGlobalStop(activeAccount?.id);
 
   // 1. Fetch user role from profiles table
   const fetchUserRole = useCallback(async () => {
@@ -193,6 +195,7 @@ export default function TaskLogger({ session, onUpdate }) {
       const { data: latestCheck, error: checkErr } = await supabase
         .from("time_logs")
         .select("stop_minutes")
+        .eq("account_id", activeAccount?.id)
         .order("stop_minutes", { ascending: false })
         .limit(1);
 
@@ -213,6 +216,7 @@ export default function TaskLogger({ session, onUpdate }) {
 
       // Execute Supabase insert with is_end_of_day boolean
       const insertPayload = {
+        account_id: activeAccount?.id,
         user_id: session.user.id,
         start_minutes: lockedStartMinutes,
         stop_minutes: newStopMinutes,
@@ -261,6 +265,7 @@ export default function TaskLogger({ session, onUpdate }) {
       const { data: latestRows, error: findErr } = await supabase
         .from("time_logs")
         .select("id, start_minutes, stop_minutes")
+        .eq("account_id", activeAccount?.id)
         .order("stop_minutes", { ascending: false })
         .limit(1);
 

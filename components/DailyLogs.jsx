@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import useSWR from "swr";
 import { supabase } from "@/utils/supabase";
+import { useAccount } from "@/context/AccountContext";
 import { Calendar, RefreshCw, ChevronRight, ChevronDown, Clock, User } from "lucide-react";
 
 /**
@@ -122,7 +123,9 @@ function groupLogsIntoShifts(logs, profilesMap, currentUserId) {
 }
 
 // SWR Fetcher: Selects all team profiles and time_logs ordered chronologically
-const fetcher = async () => {
+const fetcher = async ([_key, accountId]) => {
+  if (!accountId) return { logs: [], profMap: {} };
+
   // 1. Fetch ALL team profiles
   const { data: profiles, error: profErr } = await supabase
     .from("profiles")
@@ -137,10 +140,11 @@ const fetcher = async () => {
     });
   }
 
-  // 2. Fetch ALL team logs
+  // 2. Fetch ALL team logs for this account
   const { data: logs, error: logsErr } = await supabase
     .from("time_logs")
     .select("id, user_id, start_minutes, stop_minutes, is_end_of_day, created_at")
+    .eq("account_id", accountId)
     .order("created_at", { ascending: true });
 
   if (logsErr) throw logsErr;
@@ -150,14 +154,17 @@ const fetcher = async () => {
 
 export default function DailyLogs({ session, refreshKey }) {
   const [expandedShiftKeys, setExpandedShiftKeys] = useState({});
+  const { activeAccount } = useAccount();
 
   const currentUserId = session?.user?.id;
 
   // Initialize SWR for data fetching and caching
   // Global SWRConfig provides dedupingInterval: 0 and refreshWhenHidden: true
-  const { data, isLoading, mutate } = useSWR("master-relay-timeline", fetcher, {
-    refreshInterval: 2000,
-  });
+  const { data, isLoading, mutate } = useSWR(
+    activeAccount?.id ? ["master-relay-timeline", activeAccount.id] : null,
+    fetcher,
+    { refreshInterval: 2000 }
+  );
 
   // Derive the grouped shifts cleanly from the cached SWR data
   const groupedShifts = React.useMemo(() => {
