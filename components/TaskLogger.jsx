@@ -335,7 +335,7 @@ export default function TaskLogger({ session, onUpdate }) {
                   ? "Loading..."
                   : `${minutesToHHMMString(lockedStartMinutes)} (Auto-synced)`
               }
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 text-sm font-medium cursor-not-allowed select-none"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-600 text-sm font-medium font-mono tabular-nums cursor-not-allowed select-none transition-colors"
             />
           </div>
         </div>
@@ -361,10 +361,10 @@ export default function TaskLogger({ session, onUpdate }) {
               onFocus={handleFocus}
               onBlur={handleBlur}
               disabled={isLockedByOther}
-              className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-medium focus:outline-none focus:ring-2 transition-colors ${
+              className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-medium font-mono tabular-nums focus:outline-none transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] ${
                 isLockedByOther 
-                  ? "cursor-not-allowed bg-slate-50 text-slate-500 border-slate-200 placeholder-slate-500" 
-                  : "bg-white text-slate-900 placeholder-slate-400 " + (fieldError ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "border-slate-200 focus:ring-blue-600 focus:border-blue-600")
+                  ? "cursor-not-allowed bg-slate-50 text-slate-500 border-slate-200 placeholder-slate-500 animate-pulse-glow" 
+                  : "bg-white text-slate-900 placeholder-slate-400 " + (fieldError ? "border-red-300 focus-visible:ring-2 focus-visible:ring-red-500" : "border-slate-200 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-1")
               }`}
             />
           </div>
@@ -382,7 +382,7 @@ export default function TaskLogger({ session, onUpdate }) {
             type="checkbox"
             checked={isEndOfDay}
             onChange={(e) => setIsEndOfDay(e.target.checked)}
-            className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 transition-colors cursor-pointer"
+            className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors cursor-pointer"
           />
           <label
             htmlFor="isEndOfDay"
@@ -396,7 +396,7 @@ export default function TaskLogger({ session, onUpdate }) {
         <button
           type="submit"
           disabled={submitting || fetchingLatest}
-          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-60 text-white font-medium rounded-xl shadow-sm transition-all duration-150 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none text-white font-medium rounded-xl shadow-xs transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
         >
           {submitting ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -415,7 +415,7 @@ export default function TaskLogger({ session, onUpdate }) {
               type="button"
               onClick={() => setShowRollbackModal(true)}
               disabled={rollingBack}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-red-400 hover:text-red-600 hover:bg-red-50/60 px-3 py-1.5 rounded-lg border border-red-200/60 transition-colors focus:outline-none"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-red-500 hover:text-red-700 hover:bg-red-50/70 active:scale-[0.97] px-3 py-1.5 rounded-lg border border-red-200/70 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
             >
               {rollingBack ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />

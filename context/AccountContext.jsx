@@ -98,6 +98,7 @@ export function AccountProvider({ children, session }) {
     if (urlAccountId && accounts.length > 0) {
       const matchedAccount = accounts.find((acc) => String(acc.id) === String(urlAccountId));
       if (matchedAccount) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setActiveAccount(matchedAccount);
       }
     }

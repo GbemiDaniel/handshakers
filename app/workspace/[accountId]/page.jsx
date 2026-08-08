@@ -94,20 +94,20 @@ export default function WorkspacePage() {
         <Header session={session} onSignOut={handleSignOut} />
 
         {/* Main Dashboard Content */}
-        <div className="flex-1 px-4 py-8 sm:px-6 lg:px-8 flex flex-col items-center">
-          <div className="max-w-xl mx-auto w-full space-y-6">
+        <div className="flex-1 px-4 py-8 sm:px-6 lg:px-8 flex flex-col items-center w-full">
+          <div className="@container max-w-xl mx-auto w-full space-y-6">
             {/* Visual Fuel Gauge Progress Bar synced with refreshKey */}
             <FuelGauge />
 
             {/* Segmented Control Tabs */}
-            <div className="bg-slate-200/70 p-1 rounded-xl flex items-center gap-1 text-xs font-medium">
+            <div className="bg-slate-200/80 backdrop-blur-sm p-1 rounded-xl flex items-center gap-1 text-xs font-medium border border-slate-200/60 shadow-inner">
               <button
                 type="button"
                 onClick={() => setActiveTab("logger")}
-                className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-all duration-150 ${
+                className={`flex-1 py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                   activeTab === "logger"
-                    ? "bg-white text-blue-600 font-semibold shadow-2xs border border-slate-200/60"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-white text-blue-600 font-semibold shadow-xs border border-slate-200/60"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
                 }`}
               >
                 <Clock className="w-4 h-4" />
@@ -117,10 +117,10 @@ export default function WorkspacePage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("calculator")}
-                className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-all duration-150 ${
+                className={`flex-1 py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                   activeTab === "calculator"
-                    ? "bg-white text-blue-600 font-semibold shadow-2xs border border-slate-200/60"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-white text-blue-600 font-semibold shadow-xs border border-slate-200/60"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
                 }`}
               >
                 <Calculator className="w-4 h-4" />
@@ -129,7 +129,7 @@ export default function WorkspacePage() {
             </div>
 
             {/* Active Tab View Rendering synced with refreshKey */}
-            <div className="w-full">
+            <div className="w-full animate-in fade-in duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]">
               {activeTab === "logger" ? (
                 <div className="space-y-6 w-full">
                   <TaskLogger session={session} onUpdate={handleUpdate} />

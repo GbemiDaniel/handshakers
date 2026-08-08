@@ -76,13 +76,13 @@ export default function ProfileSettings({ isOpen, onClose, session, onProfileUpd
       {/* Backdrop Blur Overlay */}
       <div
         onClick={onClose}
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[50] transition-opacity duration-300 animate-in fade-in"
+        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[50] transition-opacity duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] animate-in fade-in"
         aria-hidden="true"
       />
 
       {/* Slide-out Drawer */}
       <aside
-        className="fixed inset-y-0 right-0 w-full sm:max-w-sm bg-white shadow-2xl z-[60] flex flex-col h-full transform transition-transform duration-300 animate-in slide-in-from-right"
+        className="fixed inset-y-0 right-0 w-full sm:max-w-sm bg-white shadow-2xl z-[60] flex flex-col h-full transform transition-transform duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] animate-in slide-in-from-right"
         role="dialog"
         aria-modal="true"
         aria-labelledby="profile-settings-title"
@@ -104,7 +104,7 @@ export default function ProfileSettings({ isOpen, onClose, session, onProfileUpd
           <button
             type="button"
             onClick={onClose}
-            className="w-11 h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300"
+            className="w-10 h-10 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             aria-label="Close settings drawer"
           >
             <X className="w-5 h-5" />
@@ -151,7 +151,7 @@ export default function ProfileSettings({ isOpen, onClose, session, onProfileUpd
                     placeholder="Enter your full name"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full h-11 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors"
+                    className="w-full h-11 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-1 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]"
                   />
                 </div>
               </div>
@@ -184,7 +184,7 @@ export default function ProfileSettings({ isOpen, onClose, session, onProfileUpd
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="w-full h-11 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-60 text-white font-medium rounded-xl shadow-sm transition-all duration-150 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+                  className="w-full h-11 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 active:scale-[0.98] disabled:opacity-60 text-white font-medium rounded-xl shadow-xs transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                 >
                   {isSaving ? (
                     <>

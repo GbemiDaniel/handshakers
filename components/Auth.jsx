@@ -158,7 +158,7 @@ export default function Auth({ onAuthSuccess }) {
               placeholder="John Doe"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors"
+              className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-1 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]"
             />
           </div>
         )}
@@ -182,7 +182,7 @@ export default function Auth({ onAuthSuccess }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors"
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-1 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]"
             />
           </div>
         </div>
@@ -206,12 +206,12 @@ export default function Auth({ onAuthSuccess }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full pl-10 pr-12 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors"
+              className="w-full pl-10 pr-12 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-1 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 px-3 sm:px-4 flex items-center justify-center text-slate-400 hover:text-slate-600 focus:outline-none"
+              className="absolute inset-y-0 right-0 px-3 sm:px-4 flex items-center justify-center text-slate-400 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-r-xl"
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -220,14 +220,14 @@ export default function Auth({ onAuthSuccess }) {
 
         {/* Feedback Messages */}
         {error && (
-          <div className="flex items-start gap-2 p-3.5 bg-red-50 border border-red-200/80 rounded-xl text-xs font-medium text-red-700">
+          <div className="flex items-start gap-2 p-3.5 bg-red-50 border border-red-200/80 rounded-xl text-xs font-medium text-red-700 animate-in fade-in duration-200">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <span className="leading-snug break-words">{error}</span>
           </div>
         )}
 
         {message && (
-          <div className="flex items-start gap-2 p-3.5 bg-emerald-50 border border-emerald-200/80 rounded-xl text-xs font-medium text-emerald-700">
+          <div className="flex items-start gap-2 p-3.5 bg-emerald-50 border border-emerald-200/80 rounded-xl text-xs font-medium text-emerald-700 animate-in fade-in duration-200">
             <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
             <span className="leading-snug break-words">{message}</span>
           </div>
@@ -237,7 +237,7 @@ export default function Auth({ onAuthSuccess }) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-60 text-white font-medium rounded-xl shadow-sm transition-all duration-150 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 active:scale-[0.98] disabled:opacity-60 text-white font-medium rounded-xl shadow-xs transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
         >
           {loading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -262,7 +262,7 @@ export default function Auth({ onAuthSuccess }) {
               <button
                 type="button"
                 onClick={toggleMode}
-                className="font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors focus:outline-none"
+                className="font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1"
               >
                 Log In
               </button>
@@ -273,7 +273,7 @@ export default function Auth({ onAuthSuccess }) {
               <button
                 type="button"
                 onClick={toggleMode}
-                className="font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors focus:outline-none"
+                className="font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1"
               >
                 Create Account
               </button>

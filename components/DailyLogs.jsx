@@ -202,19 +202,19 @@ export default function DailyLogs({ session, refreshKey }) {
   };
 
   return (
-    <div className="w-full bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-4">
+    <div className="@container w-full bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs space-y-4 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-          <Calendar className="w-3.5 h-3.5 text-slate-400" />
+      <div className="flex items-center justify-between min-w-0">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider truncate">
+          <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
           <span>Shared Relay Timeline</span>
         </div>
         <button
           type="button"
           onClick={() => mutate()}
           disabled={isLoading}
-          className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100 disabled:opacity-50"
+          className="text-slate-400 hover:text-slate-600 transition-colors duration-150 ease-[cubic-bezier(0.4,0,0.2,1)] p-1 rounded-lg hover:bg-slate-100 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           title="Refresh Shared Relay Timeline"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
@@ -223,12 +223,15 @@ export default function DailyLogs({ session, refreshKey }) {
 
       {/* Accordion Grouped Shifts List */}
       {isLoading ? (
-        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/50 text-center text-xs text-slate-400 animate-pulse">
-          Loading shared relay timeline...
+        <div className="p-6 bg-slate-50/70 rounded-xl border border-slate-200/60 text-center text-xs text-slate-400 animate-pulse flex items-center justify-center gap-2">
+          <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
+          <span>Loading shared relay timeline...</span>
         </div>
       ) : groupedShifts.length === 0 ? (
-        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/50 text-center text-xs text-slate-400">
-          No time logged in relay shifts yet.
+        <div className="p-6 bg-slate-50/50 rounded-xl border border-slate-200/60 text-center space-y-1.5">
+          <Clock className="w-6 h-6 text-slate-300 mx-auto mb-1" />
+          <p className="text-xs font-semibold text-slate-700">No time logged in relay shifts yet</p>
+          <p className="text-[11px] text-slate-400 max-w-xs mx-auto">Use the Snap-On Task Logger above to record your shift start and stop times.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -237,58 +240,55 @@ export default function DailyLogs({ session, refreshKey }) {
             return (
               <div key={shift.shiftId} className="w-full">
                 {/* Top Level Accordion Trigger */}
-                <div
+                <button
+                  type="button"
                   onClick={() => toggleAccordion(shift.shiftId)}
-                  className={`flex items-center justify-between py-3 px-3.5 rounded-xl border transition-colors cursor-pointer select-none ${
+                  className={`w-full flex items-center justify-between py-3 px-3.5 rounded-xl border text-left transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                     isExpanded
-                      ? "bg-slate-50 border-slate-300 rounded-b-none"
-                      : "bg-white border-slate-200/70 hover:bg-slate-50/80"
+                      ? "bg-slate-50/90 border-slate-300 rounded-b-none"
+                      : "bg-white border-slate-200/80 hover:bg-slate-50/80 hover:border-slate-300/80"
                   }`}
                 >
                   <div className="flex items-center gap-2.5 text-slate-700 text-xs font-medium min-w-0">
-                    <div className="text-slate-400 transition-transform duration-150">
-                      {isExpanded ? (
-                        <ChevronDown className="w-4 h-4 text-blue-600" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4 text-slate-400" />
-                      )}
+                    <div className={`text-slate-400 transition-transform duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] ${isExpanded ? "rotate-90 text-blue-600" : ""}`}>
+                      <ChevronRight className="w-4 h-4" />
                     </div>
                     {/* Anchor Date Title */}
                     <span className="truncate font-semibold text-slate-800">
                       {shift.shiftDateTitle}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-normal shrink-0">
+                    <span className="text-[10px] text-slate-400 font-normal shrink-0 tabular-nums">
                       ({shift.sessions.length} {shift.sessions.length === 1 ? "session" : "sessions"})
                     </span>
                   </div>
 
-                  <div className="font-semibold text-slate-900 font-mono text-xs shrink-0">
+                  <div className="font-semibold text-slate-900 font-mono text-xs tabular-nums shrink-0 pl-2">
                     {minutesToHHMMDisplay(shift.dailyTotalMinutes)}
                   </div>
-                </div>
+                </button>
 
                 {/* Sub-Content Panel: Nested List of Individual Sessions */}
                 {isExpanded && (
-                  <div className="bg-slate-50 p-3 rounded-b-xl border-x border-b border-slate-200/80 space-y-2 text-xs animate-in fade-in duration-150">
+                  <div className="bg-slate-50/80 p-3 rounded-b-xl border-x border-b border-slate-200/80 space-y-2 text-xs animate-in fade-in duration-150 ease-[cubic-bezier(0.4,0,0.2,1)]">
                     {shift.sessions.map((sess, idx) => (
                       <div
                         key={sess.id || idx}
-                        className={`py-2.5 px-3 bg-white rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs ${
+                        className={`py-2.5 px-3 bg-white rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs transition-colors duration-150 ${
                           sess.isCurrentUser
-                            ? "border-blue-200/80 ring-1 ring-blue-50"
-                            : "border-slate-200/60"
+                            ? "border-blue-200/80 ring-1 ring-blue-50/80"
+                            : "border-slate-200/70 hover:border-slate-300/70"
                         }`}
                       >
                         <div className="flex items-center gap-2 text-slate-600 font-medium min-w-0">
                           <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <span className="truncate">
+                          <span className="truncate font-mono tabular-nums">
                             <strong className="text-slate-800">{sess.startClock}</strong> &ndash; <strong className="text-slate-800">{sess.stopClock}</strong>
                           </span>
                           {/* User Attribution Badge */}
                           <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded shrink-0 ${
                             sess.isCurrentUser
                               ? "text-blue-700 bg-blue-50 border border-blue-200/80"
-                              : "text-slate-500 bg-slate-100 border border-slate-200/60"
+                              : "text-slate-600 bg-slate-100 border border-slate-200/70"
                           }`}>
                             <User className="w-2.5 h-2.5" />
                             {sess.isCurrentUser ? "You" : sess.userName}
@@ -299,7 +299,7 @@ export default function DailyLogs({ session, refreshKey }) {
                             </span>
                           )}
                         </div>
-                        <div className="text-slate-500 font-medium text-[11px] shrink-0 pl-5.5 sm:pl-0">
+                        <div className="text-slate-500 font-medium text-[11px] font-mono tabular-nums shrink-0 pl-5.5 sm:pl-0">
                           {sess.durationHHMM} ({sess.durationMinutes} mins)
                         </div>
                       </div>

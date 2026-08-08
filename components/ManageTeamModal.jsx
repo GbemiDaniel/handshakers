@@ -164,7 +164,7 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
       <div className="fixed inset-0 z-[100]">
         {/* Backdrop */}
         <div
-          className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-200"
+          className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] animate-in fade-in"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -172,7 +172,7 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
         {/* Centering Container */}
         <div className="flex items-center justify-center min-h-full p-4 sm:p-6 pointer-events-none">
           {/* Modal Card */}
-          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl pointer-events-auto flex flex-col max-h-[90vh] overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl pointer-events-auto flex flex-col max-h-[90vh] overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]">
 
           {/* Header */}
           <div className="flex items-center justify-between p-5 border-b border-slate-100 shrink-0 bg-white z-20">
@@ -191,7 +191,7 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
             </div>
             <button
               onClick={onClose}
-              className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none shrink-0"
+              className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 shrink-0"
             >
               <X className="w-5 h-5" />
             </button>

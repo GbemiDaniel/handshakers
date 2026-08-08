@@ -49,7 +49,7 @@ export default function Header({ session, onSignOut }) {
             <button
               type="button"
               onClick={() => setIsProfileSettingsOpen(true)}
-              className="flex items-center gap-2 sm:gap-3 p-1 sm:pr-3 sm:bg-slate-50 sm:border sm:border-slate-200/80 rounded-full cursor-pointer hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300"
+              className="flex items-center gap-2 sm:gap-3 p-1 sm:pr-3 sm:bg-slate-50/80 sm:border sm:border-slate-200/80 rounded-full cursor-pointer hover:bg-slate-100/90 active:scale-[0.98] transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
               title="Open Profile Settings"
             >
               <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0">
@@ -63,7 +63,7 @@ export default function Header({ session, onSignOut }) {
             <button
               type="button"
               onClick={onSignOut}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 active:scale-[0.97] transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
             >
               <LogOut className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
               <span className="hidden sm:inline">Sign Out</span>

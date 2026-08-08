@@ -94,11 +94,11 @@ export default function PayoutCalculator({ session }) {
       >
         {hasPreviousData ? (
           <div className="flex flex-col items-center mb-8">
-            <div className="flex p-1 space-x-1 bg-slate-100/80 backdrop-blur-md rounded-xl w-full max-w-md border border-slate-200/60 shadow-inner">
+            <div className="flex p-1 space-x-1 bg-slate-100/90 backdrop-blur-md rounded-xl w-full max-w-md border border-slate-200/70 shadow-inner">
               <button 
                 type="button"
                 onClick={() => setPayCycle('previous')} 
-                className={`flex-1 flex justify-center items-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg transition-all duration-200 ${payCycle === 'previous' ? 'bg-white text-slate-800 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+                className={`flex-1 flex justify-center items-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${payCycle === 'previous' ? 'bg-white text-slate-800 shadow-xs border border-slate-200/60' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
               >
                 <CheckCircle2 className={`w-3.5 h-3.5 ${payCycle === 'previous' ? 'text-emerald-500' : 'text-slate-400'}`} />
                 Previous Cycle
@@ -106,7 +106,7 @@ export default function PayoutCalculator({ session }) {
               <button 
                 type="button"
                 onClick={() => setPayCycle('current')} 
-                className={`flex-1 flex justify-center items-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg transition-all duration-200 ${payCycle === 'current' ? 'bg-white text-slate-800 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+                className={`flex-1 flex justify-center items-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${payCycle === 'current' ? 'bg-white text-slate-800 shadow-xs border border-slate-200/60' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
               >
                 <Clock className={`w-3.5 h-3.5 ${payCycle === 'current' ? 'text-blue-500' : 'text-slate-400'}`} />
                 Current Cycle
@@ -119,7 +119,7 @@ export default function PayoutCalculator({ session }) {
           </div>
         ) : (
           <div className="flex flex-col items-center mb-8">
-            <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 bg-blue-50/50 backdrop-blur-md border border-blue-100/60 px-4 py-2 rounded-xl shadow-sm">
+            <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 bg-blue-50/50 backdrop-blur-md border border-blue-100/60 px-4 py-2 rounded-xl shadow-xs">
               <Clock className="w-4 h-4"/>
               Current Logging Cycle
             </div>
@@ -150,7 +150,7 @@ export default function PayoutCalculator({ session }) {
                     ? "Loading..."
                     : `${minutesToHHMMString(myTotalMinutes)} (Auto-synced)`
                 }
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 text-sm font-medium cursor-not-allowed select-none"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-600 text-sm font-medium font-mono tabular-nums cursor-not-allowed select-none transition-colors"
               />
             </div>
           </div>
@@ -174,7 +174,7 @@ export default function PayoutCalculator({ session }) {
                     ? "Loading..."
                     : `${minutesToHHMMString(teamTotalMinutes)} (Auto-synced)`
                 }
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 text-sm font-medium cursor-not-allowed select-none"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-600 text-sm font-medium font-mono tabular-nums cursor-not-allowed select-none transition-colors"
               />
             </div>
           </div>
@@ -197,7 +197,7 @@ export default function PayoutCalculator({ session }) {
                 placeholder="e.g. 40:00"
                 value={platformTimeInput}
                 onChange={(e) => setPlatformTimeInput(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors"
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-medium font-mono tabular-nums placeholder-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-1 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]"
               />
             </div>
           </div>
@@ -206,7 +206,7 @@ export default function PayoutCalculator({ session }) {
           <button
             type="submit"
             disabled={calculating || isLoading}
-            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-60 text-white font-medium rounded-xl shadow-sm transition-all duration-150 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 active:scale-[0.98] disabled:opacity-60 text-white font-medium rounded-xl shadow-xs transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
           >
             <Calculator className="w-4 h-4" />
             <span>Calculate Payout</span>
@@ -222,10 +222,10 @@ export default function PayoutCalculator({ session }) {
                 <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Approved Client Paid Pool
                 </div>
-                <div className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mt-0.5">
+                <div className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mt-0.5 font-mono tabular-nums">
                   {calculationResult.platformHHMM}
                 </div>
-                <div className="text-xs font-medium text-slate-500 mt-0.5">
+                <div className="text-xs font-medium text-slate-500 mt-0.5 font-mono tabular-nums">
                   ({calculationResult.platformDecimalHours} decimal hours)
                 </div>
               </div>
@@ -238,10 +238,10 @@ export default function PayoutCalculator({ session }) {
                 <button
                   type="button"
                   onClick={handleCopyReport}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-200 transition-colors focus:outline-none"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-200 active:scale-[0.97] transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 >
                   <Copy className="w-3.5 h-3.5" />
-                  <span>Copy</span>
+                  <span>Copy Report</span>
                 </button>
               </div>
             </div>
@@ -261,10 +261,10 @@ export default function PayoutCalculator({ session }) {
                   {calculationResult.breakdown.map((row) => (
                     <div
                       key={row.userId}
-                      className={`p-3.5 sm:p-4 bg-white border rounded-xl shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors ${
+                      className={`p-3.5 sm:p-4 bg-white border rounded-xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] ${
                         row.isCurrentUser
                           ? "border-blue-300 ring-1 ring-blue-100 bg-blue-50/20"
-                          : "border-slate-200/70 hover:border-slate-300"
+                          : "border-slate-200/80 hover:border-slate-300"
                       }`}
                     >
                       {/* User Info & Logged Time */}
@@ -293,7 +293,7 @@ export default function PayoutCalculator({ session }) {
                             )}
                           </div>
                           <div className="text-xs text-slate-500 mt-0.5">
-                            Logged: <span className="font-medium text-slate-700">{row.userHHMM}</span> ({row.userDecimalHours} hrs)
+                            Logged: <span className="font-medium text-slate-700 font-mono tabular-nums">{row.userHHMM}</span> ({row.userDecimalHours} hrs)
                           </div>
                         </div>
                       </div>
@@ -301,16 +301,16 @@ export default function PayoutCalculator({ session }) {
                       {/* Share % and Dual Format Final Payout */}
                       <div className="flex items-center justify-between sm:justify-end gap-4 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100">
                         <div className="text-right">
-                          <div className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100 inline-block">
+                          <div className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100 inline-block font-mono tabular-nums">
                             {row.sharePercentage}% Share
                           </div>
                         </div>
 
                         <div className="text-right">
-                          <div className="text-base font-bold text-slate-900 tracking-tight">
+                          <div className="text-base font-bold text-slate-900 tracking-tight font-mono tabular-nums">
                             {row.payoutHHMM}
                           </div>
-                          <div className="text-xs font-medium text-slate-500">
+                          <div className="text-xs font-medium text-slate-500 font-mono tabular-nums">
                             {row.payoutDecimalHours} hrs
                           </div>
                         </div>

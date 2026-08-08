@@ -4,7 +4,8 @@ import { supabase } from "@/utils/supabase";
 /**
  * Fetches the highest stop_minutes value across all time_logs for a specific account.
  */
-export const latestGlobalStopFetcher = async ([_key, accountId]) => {
+export const latestGlobalStopFetcher = async (keyArg = []) => {
+  const accountId = Array.isArray(keyArg) ? keyArg[1] : keyArg;
   if (!accountId) return 0;
 
   const { data, error } = await supabase

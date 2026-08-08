@@ -29,9 +29,9 @@ function CommandCenter() {
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-8">
+    <div className="@container w-full max-w-5xl mx-auto space-y-8">
       <header className="space-y-2">
-        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Your Workspaces</h2>
+        <h2 className="text-[clamp(1.5rem,3.5vw,2rem)] font-bold text-slate-900 tracking-tight">Your Workspaces</h2>
         <p className="text-sm text-slate-500">
           Select a workspace to enter the command center.
         </p>
@@ -43,9 +43,9 @@ function CommandCenter() {
           <button
             type="button"
             onClick={() => setIsManagerModalOpen(true)}
-            className="group flex flex-col items-center justify-center gap-3 p-6 h-40 bg-blue-50/50 hover:bg-blue-50 border-2 border-dashed border-blue-200 hover:border-blue-300 rounded-3xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="group flex flex-col items-center justify-center gap-3 p-6 h-40 bg-blue-50/50 hover:bg-blue-50/90 active:scale-[0.98] border-2 border-dashed border-blue-200 hover:border-blue-300 rounded-3xl transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
           >
-            <div className="w-12 h-12 rounded-2xl bg-white border border-blue-100 flex items-center justify-center text-blue-600 shadow-sm group-hover:scale-105 transition-transform">
+            <div className="w-12 h-12 rounded-2xl bg-white border border-blue-100 flex items-center justify-center text-blue-600 shadow-xs group-hover:scale-105 transition-transform duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]">
               <Plus className="w-6 h-6" />
             </div>
             <span className="text-sm font-semibold text-blue-700">Create New Workspace</span>
@@ -57,13 +57,13 @@ function CommandCenter() {
           <button
             key={acc.id}
             onClick={() => router.push(`/workspace/${acc.id}`)}
-            className="group relative flex flex-col justify-between p-6 h-40 bg-white border border-slate-200 hover:border-blue-200 rounded-3xl shadow-sm hover:shadow-md transition-all duration-200 text-left overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="group relative flex flex-col justify-between p-6 h-40 bg-white border border-slate-200/90 hover:border-blue-300 rounded-3xl shadow-xs hover:shadow-md active:scale-[0.98] transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] text-left overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
           >
-            <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 translate-x-1 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]">
               <ArrowRight className="w-5 h-5 text-blue-500" />
             </div>
             
-            <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 shrink-0 mb-4 group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:border-blue-100 transition-colors">
+            <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 shrink-0 mb-4 group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:border-blue-100 transition-colors duration-200">
               <Building className="w-6 h-6" />
             </div>
 

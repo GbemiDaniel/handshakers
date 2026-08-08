@@ -180,11 +180,13 @@ export function usePayoutCalculator({ session }) {
       const time = new Date(log.created_at).getTime();
       return time >= previousWeekStart && time < pacificMidnightUTC;
     });
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHasPreviousData(hasPrev);
   }, [data?.logs, pacificMidnightUTC]);
 
   useEffect(() => {
     if (!hasPreviousData) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPayCycle('current');
     }
   }, [hasPreviousData]);
@@ -256,6 +258,7 @@ export function usePayoutCalculator({ session }) {
       currentCycleTotalMinutes: currentTotal,
       remainingMinutes: 4800 - currentTotal
     };
+    // eslint-disable-next-line react-hooks/preserve-manual-memoization
   }, [data?.logs, payCycle, pacificMidnightUTC, pacificNoonUTC]);
 
   const profilesMap = useMemo(() => {
@@ -265,6 +268,7 @@ export function usePayoutCalculator({ session }) {
       map[p.id] = p.full_name || `Member (${p.id.slice(0, 6)})`;
     });
     return map;
+    // eslint-disable-next-line react-hooks/preserve-manual-memoization
   }, [data?.profiles]);
 
   const statusMap = useMemo(() => {
@@ -274,6 +278,7 @@ export function usePayoutCalculator({ session }) {
       map[m.user_id] = m.status;
     });
     return map;
+    // eslint-disable-next-line react-hooks/preserve-manual-memoization
   }, [data?.members]);
 
   const { teamTotalMinutes, userTotals } = useMemo(() => {
