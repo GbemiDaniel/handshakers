@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useLatestGlobalStop } from "@/hooks/useLatestGlobalStop";
-import { useAccount } from "@/context/AccountContext";
+import { usePayoutCalculator } from "@/hooks/usePayoutCalculator";
 import { Gauge, Sparkles, RefreshCw } from "lucide-react";
 
 /**
@@ -29,20 +28,13 @@ export default function FuelGauge() {
 
   const MAX_POOL_MINUTES = 4800; // 80 hours strictly
 
-  const { activeAccount } = useAccount();
-
-  // Shared SWR hook: auto-polls the latest global stop_minutes every 2s.
-  // Shared cache key with TaskLogger — when TaskLogger mutates after insert,
-  // FuelGauge automatically receives the updated value.
-  const {
-    data: consumedMinutes = 0,
-    isLoading: fetching,
-    mutate: refreshPool,
-  } = useLatestGlobalStop(activeAccount?.id);
+  const { state, actions } = usePayoutCalculator({});
+  const { currentCycleTotalMinutes = 0, isLoading: fetching } = state;
+  const { mutate: refreshPool } = actions;
 
   // Trigger smooth transition animation on mount or data fetch
   useEffect(() => {
-    const rawPercent = (consumedMinutes / MAX_POOL_MINUTES) * 100;
+    const rawPercent = (currentCycleTotalMinutes / MAX_POOL_MINUTES) * 100;
     const cappedPercent = Math.min(Math.max(rawPercent, 0), 100);
 
     const timer = setTimeout(() => {
@@ -50,21 +42,21 @@ export default function FuelGauge() {
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [consumedMinutes]);
+  }, [currentCycleTotalMinutes]);
 
   // Dynamic Color Logic
   let fillColorClass = "bg-blue-600";
   let badgeColorClass = "bg-blue-50 border-blue-100 text-blue-600";
 
-  if (consumedMinutes >= 4800) {
+  if (currentCycleTotalMinutes >= 4800) {
     fillColorClass = "bg-red-500";
     badgeColorClass = "bg-red-50 border-red-200 text-red-700";
-  } else if (consumedMinutes >= 4320) {
+  } else if (currentCycleTotalMinutes >= 4320) {
     fillColorClass = "bg-amber-500";
     badgeColorClass = "bg-amber-50 border-amber-200 text-amber-700";
   }
 
-  const rawPercent = ((consumedMinutes / MAX_POOL_MINUTES) * 100).toFixed(1);
+  const rawPercent = ((currentCycleTotalMinutes / MAX_POOL_MINUTES) * 100).toFixed(1);
 
   return (
     <div className="w-full bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-3 transition-all">
@@ -92,7 +84,7 @@ export default function FuelGauge() {
             {rawPercent}%
           </span>
           <span className="text-xs font-semibold text-slate-900 font-mono">
-            {minutesToHHMMDisplay(consumedMinutes)} / 80h 00m Used
+            {minutesToHHMMDisplay(currentCycleTotalMinutes)} / 80h 00m Used
           </span>
         </div>
       </div>

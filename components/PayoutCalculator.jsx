@@ -3,7 +3,7 @@ import React from "react";
 import { toast } from "sonner";
 import BaseCard from "./BaseCard";
 import TimelineVisualizer from "./TimelineVisualizer";
-import { Calculator, Clock, Lock, RefreshCw, Users, User, Copy } from "lucide-react";
+import { Calculator, Clock, Lock, RefreshCw, Users, User, Copy, CalendarDays, CheckCircle2 } from "lucide-react";
 import {
   usePayoutCalculator,
   minutesToHHMMString,
@@ -24,8 +24,11 @@ export default function PayoutCalculator({ session }) {
     myTotalMinutes,
     calculationResult,
     isLoading,
+    payCycle,
+    dateLabels,
+    hasPreviousData,
   } = state;
-  const { setPlatformTimeInput } = setters;
+  const { setPlatformTimeInput, setPayCycle } = setters;
   const { calculatePayout, mutate } = actions;
 
   const currentUserId = session?.user?.id;
@@ -89,6 +92,44 @@ export default function PayoutCalculator({ session }) {
           </button>
         }
       >
+        {hasPreviousData ? (
+          <div className="flex flex-col items-center mb-8">
+            <div className="flex p-1 space-x-1 bg-slate-100/80 backdrop-blur-md rounded-xl w-full max-w-md border border-slate-200/60 shadow-inner">
+              <button 
+                type="button"
+                onClick={() => setPayCycle('previous')} 
+                className={`flex-1 flex justify-center items-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg transition-all duration-200 ${payCycle === 'previous' ? 'bg-white text-slate-800 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+              >
+                <CheckCircle2 className={`w-3.5 h-3.5 ${payCycle === 'previous' ? 'text-emerald-500' : 'text-slate-400'}`} />
+                Previous Cycle
+              </button>
+              <button 
+                type="button"
+                onClick={() => setPayCycle('current')} 
+                className={`flex-1 flex justify-center items-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg transition-all duration-200 ${payCycle === 'current' ? 'bg-white text-slate-800 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+              >
+                <Clock className={`w-3.5 h-3.5 ${payCycle === 'current' ? 'text-blue-500' : 'text-slate-400'}`} />
+                Current Cycle
+              </button>
+            </div>
+            <div className="mt-2.5 flex items-center gap-1.5 text-[11px] font-medium text-slate-400 uppercase tracking-wider bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
+              <CalendarDays className="w-3.5 h-3.5 text-slate-400"/>
+              {payCycle === 'current' ? `Logging: ${dateLabels?.current}` : `Payout for: ${dateLabels?.previous}`}
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center mb-8">
+            <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 bg-blue-50/50 backdrop-blur-md border border-blue-100/60 px-4 py-2 rounded-xl shadow-sm">
+              <Clock className="w-4 h-4"/>
+              Current Logging Cycle
+            </div>
+            <div className="mt-2 flex items-center gap-1.5 text-[11px] font-medium text-slate-400 uppercase tracking-wider bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
+              <CalendarDays className="w-3.5 h-3.5 text-slate-400"/>
+              {dateLabels?.current}
+            </div>
+          </div>
+        )}
+
         <form onSubmit={calculatePayout} className="space-y-5">
           {/* Input 1: My Total Logged Time (Locked, Read-Only, Auto-Populated) */}
           <div>

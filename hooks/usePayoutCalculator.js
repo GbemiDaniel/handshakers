@@ -70,7 +70,7 @@ export function timeToTotalMinutes(timeStr) {
 }
 
 export const fetchTeamData = async (accountId) => {
-  let logsQuery = supabase.from("time_logs").select("id, user_id, start_minutes, stop_minutes, created_at");
+  let logsQuery = supabase.from("time_logs").select("id, user_id, start_minutes, stop_minutes, created_at, is_end_of_day");
   let membersQuery = supabase.from("account_members").select("user_id, status");
   
   if (accountId) {
@@ -100,6 +100,8 @@ export function usePayoutCalculator({ session }) {
   const [platformTimeInput, setPlatformTimeInput] = useState("");
   const [calculating, setCalculating] = useState(false);
   const [calculationResult, setCalculationResult] = useState(null);
+  const [payCycle, setPayCycle] = useState('previous');
+  const [hasPreviousData, setHasPreviousData] = useState(true);
 
   const currentUserId = session?.user?.id;
   const activeAccountId = activeAccount?.id;
@@ -110,7 +112,151 @@ export function usePayoutCalculator({ session }) {
     { refreshInterval: 2000 }
   );
 
-  const teamLogs = useMemo(() => data?.logs || [], [data?.logs]);
+  const { pacificMidnightUTC, pacificNoonUTC, dateLabels } = useMemo(() => {
+    const now = new Date();
+    
+    const laFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Los_Angeles',
+      year: 'numeric', month: 'numeric', day: 'numeric',
+      hour: 'numeric', minute: 'numeric', second: 'numeric',
+      hour12: false
+    });
+    
+    const laLocal = new Date(laFormatter.format(now));
+    
+    const day = laLocal.getDay();
+    const diff = laLocal.getDate() - day + (day === 0 ? -6 : 1);
+    
+    const y = laLocal.getFullYear();
+    const m = laLocal.getMonth();
+    const d = diff;
+    
+    const approximateEpoch = Date.UTC(y, m, d, 8, 0, 0, 0);
+    
+    const offsetFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Los_Angeles',
+      timeZoneName: 'shortOffset'
+    });
+    
+    const parts = offsetFormatter.formatToParts(new Date(approximateEpoch));
+    const offsetStr = parts.find(p => p.type === 'timeZoneName').value;
+    
+    let offsetHours = -8;
+    const match = offsetStr.match(/GMT([+-]\d+)/);
+    if (match) {
+      offsetHours = parseInt(match[1], 10);
+    }
+    
+    const midnightEpoch = Date.UTC(y, m, d, 0, 0, 0, 0) - (offsetHours * 60 * 60 * 1000);
+    const noonEpoch = midnightEpoch + (12 * 60 * 60 * 1000);
+    
+    const currentStart = new Date(midnightEpoch);
+    const previousStart = new Date(currentStart);
+    previousStart.setDate(previousStart.getDate() - 7);
+    
+    const currentWeekEnd = new Date(currentStart);
+    currentWeekEnd.setDate(currentWeekEnd.getDate() + 6);
+    
+    const previousWeekEnd = new Date(previousStart);
+    previousWeekEnd.setDate(previousWeekEnd.getDate() + 6);
+    
+    const formatDate = (dateObj) => dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const labels = {
+      current: `${formatDate(currentStart)} - ${formatDate(currentWeekEnd)}`,
+      previous: `${formatDate(previousStart)} - ${formatDate(previousWeekEnd)}`
+    };
+
+    return {
+      pacificMidnightUTC: midnightEpoch,
+      pacificNoonUTC: noonEpoch,
+      dateLabels: labels
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!data?.logs) return;
+    const previousWeekStart = pacificMidnightUTC - (7 * 24 * 60 * 60 * 1000);
+    const hasPrev = data.logs.some(log => {
+      const time = new Date(log.created_at).getTime();
+      return time >= previousWeekStart && time < pacificMidnightUTC;
+    });
+    setHasPreviousData(hasPrev);
+  }, [data?.logs, pacificMidnightUTC]);
+
+  useEffect(() => {
+    if (!hasPreviousData) {
+      setPayCycle('current');
+    }
+  }, [hasPreviousData]);
+
+  const { teamLogs, currentCycleTotalMinutes, remainingMinutes } = useMemo(() => {
+    if (!data?.logs) return { teamLogs: [], currentCycleTotalMinutes: 0, remainingMinutes: 4800 };
+
+    const sortedLogs = [...data.logs].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    
+    let previousCycleLogs = [];
+    let currentCycleLogs = [];
+    let hasCrossedToCurrent = false;
+    let previousLog = null;
+
+    for (let i = 0; i < sortedLogs.length; i++) {
+      const log = sortedLogs[i];
+      const logTime = new Date(log.created_at).getTime();
+      
+      if (!hasCrossedToCurrent) {
+        let triggerNewCycle = false;
+        
+        // Condition A (The Hard Cutoff)
+        if (logTime >= pacificNoonUTC) {
+          triggerNewCycle = true;
+        } 
+        // Condition B (The Buffer Zone)
+        else if (logTime >= pacificMidnightUTC && logTime < pacificNoonUTC) {
+          if (previousLog && previousLog.is_end_of_day === true) {
+            triggerNewCycle = true;
+          } 
+          // Condition C (The Zero-Drop Failsafe)
+          else if (previousLog && log.start_minutes < previousLog.stop_minutes) {
+            triggerNewCycle = true;
+          }
+        }
+        
+        if (triggerNewCycle) {
+          hasCrossedToCurrent = true;
+        }
+      }
+      
+      if (hasCrossedToCurrent) {
+        currentCycleLogs.push(log);
+      } else {
+        previousCycleLogs.push(log);
+      }
+      
+      previousLog = log;
+    }
+
+    let currentTotal = 0;
+    currentCycleLogs.forEach((log) => {
+      const duration = (log.stop_minutes || 0) - (log.start_minutes || 0);
+      if (duration > 0) {
+        currentTotal += duration;
+      }
+    });
+
+    let returnedLogs = [];
+    if (payCycle === 'current') {
+      returnedLogs = currentCycleLogs;
+    } else {
+      const previousWeekStart = pacificMidnightUTC - (7 * 24 * 60 * 60 * 1000);
+      returnedLogs = previousCycleLogs.filter(log => new Date(log.created_at).getTime() >= previousWeekStart);
+    }
+    
+    return {
+      teamLogs: returnedLogs,
+      currentCycleTotalMinutes: currentTotal,
+      remainingMinutes: 4800 - currentTotal
+    };
+  }, [data?.logs, payCycle, pacificMidnightUTC, pacificNoonUTC]);
 
   const profilesMap = useMemo(() => {
     if (!data?.profiles) return {};
@@ -131,10 +277,10 @@ export function usePayoutCalculator({ session }) {
   }, [data?.members]);
 
   const { teamTotalMinutes, userTotals } = useMemo(() => {
-    if (!data?.logs) return { teamTotalMinutes: 0, userTotals: {} };
+    if (!teamLogs) return { teamTotalMinutes: 0, userTotals: {} };
     const totals = {};
     let totalMins = 0;
-    data.logs.forEach((log) => {
+    teamLogs.forEach((log) => {
       const duration = (log.stop_minutes || 0) - (log.start_minutes || 0);
       if (duration > 0) {
         totals[log.user_id] = (totals[log.user_id] || 0) + duration;
@@ -142,7 +288,7 @@ export function usePayoutCalculator({ session }) {
       }
     });
     return { teamTotalMinutes: totalMins, userTotals: totals };
-  }, [data?.logs]);
+  }, [teamLogs]);
 
   const myTotalMinutes = useMemo(() => {
     if (currentUserId && userTotals[currentUserId]) {
@@ -233,9 +379,16 @@ export function usePayoutCalculator({ session }) {
       myTotalMinutes,
       calculationResult,
       isLoading,
+      payCycle,
+      dateLabels,
+      hasPreviousData,
+      currentCycleTotalMinutes,
+      remainingMinutes,
     },
     setters: {
       setPlatformTimeInput,
+      setPayCycle,
+      setHasPreviousData,
     },
     actions: {
       calculatePayout,
