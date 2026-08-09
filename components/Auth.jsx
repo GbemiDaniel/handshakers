@@ -132,7 +132,8 @@ export default function Auth({ onAuthSuccess }) {
   };
 
   return (
-    <BaseCard
+    <div className="w-full flex flex-col items-center max-w-sm sm:max-w-md mx-auto">
+      <BaseCard
       className="w-full max-w-sm sm:max-w-md mx-auto"
       padding="p-4 sm:p-6 sm:p-8"
       title={isSignUp ? "Create Account" : "Welcome Back"}
@@ -148,7 +149,7 @@ export default function Auth({ onAuthSuccess }) {
           <div>
             <label
               htmlFor="fullName"
-              className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5"
+              className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5"
             >
               Full Name
             </label>
@@ -158,7 +159,7 @@ export default function Auth({ onAuthSuccess }) {
               placeholder="John Doe"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-1 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]"
+              className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/80 rounded-xl text-slate-900 dark:text-white text-sm font-medium placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-1 dark:focus:border-blue-500 dark:focus:bg-slate-900 dark:focus:ring-blue-500/20 transition-all duration-200 ease-in-out dark:[&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_#0f172a] dark:[&:-webkit-autofill]:[-webkit-text-fill-color:white]"
             />
           </div>
         )}
@@ -167,12 +168,12 @@ export default function Auth({ onAuthSuccess }) {
         <div>
           <label
             htmlFor="email"
-            className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5"
+            className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5"
           >
             Email
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-400">
               <Mail className="w-4 h-4" />
             </div>
             <input
@@ -182,7 +183,7 @@ export default function Auth({ onAuthSuccess }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-1 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]"
+              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/80 rounded-xl text-slate-900 dark:text-white text-sm font-medium placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-1 dark:focus:border-blue-500 dark:focus:bg-slate-900 dark:focus:ring-blue-500/20 transition-all duration-200 ease-in-out dark:[&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_#0f172a] dark:[&:-webkit-autofill]:[-webkit-text-fill-color:white]"
             />
           </div>
         </div>
@@ -191,12 +192,12 @@ export default function Auth({ onAuthSuccess }) {
         <div>
           <label
             htmlFor="password"
-            className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5"
+            className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5"
           >
             Password
           </label>
           <div className="relative w-full">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-400">
               <Lock className="w-4 h-4" />
             </div>
             <input
@@ -206,12 +207,12 @@ export default function Auth({ onAuthSuccess }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full pl-10 pr-12 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-1 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]"
+              className="w-full pl-10 pr-12 py-2.5 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/80 rounded-xl text-slate-900 dark:text-white text-sm font-medium placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-1 dark:focus:border-blue-500 dark:focus:bg-slate-900 dark:focus:ring-blue-500/20 transition-all duration-200 ease-in-out dark:[&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_#0f172a] dark:[&:-webkit-autofill]:[-webkit-text-fill-color:white]"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 px-3 sm:px-4 flex items-center justify-center text-slate-400 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-r-xl"
+              className="absolute inset-y-0 right-0 px-3 sm:px-4 flex items-center justify-center text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-r-xl"
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -220,16 +221,16 @@ export default function Auth({ onAuthSuccess }) {
 
         {/* Feedback Messages */}
         {error && (
-          <div className="flex items-start gap-2 p-3.5 bg-red-50 border border-red-200/80 rounded-xl text-xs font-medium text-red-700 animate-in fade-in duration-200">
+          <div className="flex items-start gap-2 p-3.5 bg-red-50 dark:bg-red-950/60 border border-red-200/80 dark:border-red-900/60 rounded-xl text-xs font-medium text-red-700 dark:text-red-300 animate-in fade-in duration-200">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-            <span className="leading-snug break-words">{error}</span>
+            <span className="leading-snug wrap-break-word">{error}</span>
           </div>
         )}
 
         {message && (
-          <div className="flex items-start gap-2 p-3.5 bg-emerald-50 border border-emerald-200/80 rounded-xl text-xs font-medium text-emerald-700 animate-in fade-in duration-200">
+          <div className="flex items-start gap-2 p-3.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-900/60 rounded-xl text-xs font-medium text-emerald-700 dark:text-emerald-300 animate-in fade-in duration-200">
             <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-            <span className="leading-snug break-words">{message}</span>
+            <span className="leading-snug wrap-break-word">{message}</span>
           </div>
         )}
 
@@ -237,7 +238,7 @@ export default function Auth({ onAuthSuccess }) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 active:scale-[0.98] disabled:opacity-60 text-white font-medium rounded-xl shadow-xs transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 active:scale-[0.98] disabled:opacity-60 text-white font-medium rounded-xl shadow-xs transition-all duration-200 ease-in-out flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
         >
           {loading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -255,14 +256,14 @@ export default function Auth({ onAuthSuccess }) {
         </button>
 
         {/* State Toggle Muted Link */}
-        <div className="pt-2 text-center text-xs text-slate-500">
+        <div className="pt-2 text-center text-xs text-slate-500 dark:text-slate-400">
           {isSignUp ? (
             <p>
               Already have an account?{" "}
               <button
                 type="button"
                 onClick={toggleMode}
-                className="font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1"
+                className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1"
               >
                 Log In
               </button>
@@ -273,7 +274,7 @@ export default function Auth({ onAuthSuccess }) {
               <button
                 type="button"
                 onClick={toggleMode}
-                className="font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1"
+                className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1"
               >
                 Create Account
               </button>
@@ -283,5 +284,6 @@ export default function Auth({ onAuthSuccess }) {
       </form>
 
     </BaseCard>
+    </div>
   );
 }

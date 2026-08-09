@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Logo from "@/components/Logo";
 import Auth from "@/components/Auth";
 import { AccountProvider, useAccount } from "@/context/AccountContext";
 import WorkspaceManagerModal from "@/components/WorkspaceManagerModal";
 import { supabase } from "@/utils/supabase";
+import ThemeToggle from "@/components/ThemeToggle";
 import { Sparkles, Loader2, Building, Plus, ArrowRight } from "lucide-react";
 
 function CommandCenter() {
@@ -18,60 +20,63 @@ function CommandCenter() {
     if (!isSuperAdmin && accounts.length === 1) {
       router.push('/workspace/' + accounts[0].id);
     }
-  }, [isLoadingAccounts, isSuperAdmin, accounts, router]);
+  }, [accounts, isSuperAdmin, isLoadingAccounts, router]);
 
   if (isLoadingAccounts) {
     return (
-      <div className="flex items-center justify-center min-h-[40vh]">
-        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+      <div className="py-12 flex items-center justify-center gap-3 text-slate-400 dark:text-slate-500">
+        <Loader2 className="w-5 h-5 animate-spin text-blue-600 dark:text-blue-400" />
+        <span className="text-sm font-medium">Loading your workspaces...</span>
       </div>
     );
   }
 
   return (
-    <div className="@container w-full max-w-5xl mx-auto space-y-8">
-      <header className="space-y-2">
-        <h2 className="text-[clamp(1.5rem,3.5vw,2rem)] font-bold text-slate-900 tracking-tight">Your Workspaces</h2>
-        <p className="text-sm text-slate-500">
-          Select a workspace to enter the command center.
-        </p>
-      </header>
+    <div className="w-full space-y-8">
+      {/* Header Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xs">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            Workspaces Command Center
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Select a workspace to access its dedicated team time logger and payout calculator.
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {/* Create New Workspace Card (Super Admin Only) */}
         {isSuperAdmin && (
           <button
-            type="button"
             onClick={() => setIsManagerModalOpen(true)}
-            className="group flex flex-col items-center justify-center gap-3 p-6 h-40 bg-blue-50/50 hover:bg-blue-50/90 active:scale-[0.98] border-2 border-dashed border-blue-200 hover:border-blue-300 rounded-3xl transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 active:scale-[0.98] text-white text-sm font-medium rounded-xl shadow-xs transition-all duration-200 ease-in-out shrink-0"
           >
-            <div className="w-12 h-12 rounded-2xl bg-white border border-blue-100 flex items-center justify-center text-blue-600 shadow-xs group-hover:scale-105 transition-transform duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]">
-              <Plus className="w-6 h-6" />
-            </div>
-            <span className="text-sm font-semibold text-blue-700">Create New Workspace</span>
+            <Plus className="w-4 h-4" />
+            <span>Create Workspace</span>
           </button>
         )}
+      </div>
 
-        {/* Workspace Cards */}
-        {accounts.map((acc) => (
+      {/* Grid of Workspaces */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {accounts.map((account) => (
           <button
-            key={acc.id}
-            onClick={() => router.push(`/workspace/${acc.id}`)}
-            className="group relative flex flex-col justify-between p-6 h-40 bg-white border border-slate-200/90 hover:border-blue-300 rounded-3xl shadow-xs hover:shadow-md active:scale-[0.98] transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] text-left overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            key={account.id}
+            onClick={() => router.push(`/workspace/${account.id}`)}
+            className="group text-left bg-white dark:bg-slate-900 hover:bg-slate-50/80 dark:hover:bg-slate-800/80 border border-slate-200/90 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/80 rounded-2xl p-6 shadow-xs transition-all duration-200 ease-in-out flex flex-col justify-between h-44 relative overflow-hidden"
           >
-            <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 translate-x-1 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]">
-              <ArrowRight className="w-5 h-5 text-blue-500" />
-            </div>
-            
-            <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 shrink-0 mb-4 group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:border-blue-100 transition-colors duration-200">
-              <Building className="w-6 h-6" />
+            <div className="flex items-start justify-between w-full">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800/60 flex items-center justify-center">
+                <Building className="w-5 h-5" />
+              </div>
+              <span className="text-slate-300 dark:text-slate-600 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-150">
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </span>
             </div>
 
             <div>
-              <h3 className="text-lg font-bold text-slate-900 truncate">
-                {acc.account_name || acc.name || `Workspace (${acc.id.slice(0, 8)})`}
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
+                {account.account_name || account.name || "Workspace"}
               </h3>
-              <p className="text-xs text-slate-500 truncate mt-1">
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-mono">
                 Enter Command Center
               </p>
             </div>
@@ -79,8 +84,8 @@ function CommandCenter() {
         ))}
 
         {!isSuperAdmin && accounts.length === 0 && (
-          <div className="col-span-full py-12 text-center text-slate-500 bg-white border border-slate-200 rounded-3xl">
-            You don't have access to any workspaces yet.
+          <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
+            You don&apos;t have access to any workspaces yet.
           </div>
         )}
       </div>
@@ -94,18 +99,16 @@ function CommandCenter() {
   );
 }
 
-export default function RootPage() {
+export default function Home() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. Check active session on initial load
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
 
-    // 2. Listen for authentication changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -118,10 +121,10 @@ export default function RootPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-slate-200/80 shadow-sm">
-          <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-          <span className="text-sm font-medium text-slate-600">Loading OS...</span>
+      <main className="min-h-screen bg-slate-50 dark:bg-[#0b0f19] flex items-center justify-center">
+        <div className="flex items-center gap-3 bg-white dark:bg-slate-900 px-5 py-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+          <Loader2 className="w-5 h-5 animate-spin text-blue-600 dark:text-blue-400" />
+          <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Loading OS...</span>
         </div>
       </main>
     );
@@ -130,17 +133,20 @@ export default function RootPage() {
   // Unauthenticated View
   if (!session) {
     return (
-      <main className="min-h-screen bg-slate-50 text-slate-900 px-4 py-12 sm:px-6 lg:px-8 flex flex-col justify-center items-center">
+      <main className="min-h-screen bg-slate-50 dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 px-4 py-12 sm:px-6 lg:px-8 flex flex-col justify-center items-center">
         <div className="max-w-md mx-auto w-full space-y-6">
+          <div className="flex justify-center">
+            <ThemeToggle />
+          </div>
+
           <header className="text-center space-y-2.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-xs font-medium">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Handshakers Portal</span>
+            <div className="flex justify-center mb-6">
+              <Logo className="w-10 h-10" showText={true} />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
               Global Command Center
             </h1>
-            <p className="text-sm text-slate-500 max-w-sm mx-auto">
+            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
               Sign in to manage your multi-tenant workspaces.
             </p>
           </header>
@@ -154,21 +160,24 @@ export default function RootPage() {
   // Authenticated View
   return (
     <AccountProvider session={session}>
-      <main className="min-h-screen bg-slate-50 text-slate-900 px-4 py-12 sm:px-6 lg:px-8">
+      <main className="min-h-screen bg-slate-50 dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 px-4 py-12 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto mb-8 flex items-center justify-between">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-xs font-medium">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-100 dark:border-blue-800/60 text-blue-600 dark:text-blue-400 text-xs font-medium">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Handshakers OS</span>
           </div>
-          <button
-            onClick={async () => {
-              await supabase.auth.signOut();
-              setSession(null);
-            }}
-            className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
-          >
-            Sign out
-          </button>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <button
+              onClick={async () => {
+                await supabase.auth.signOut();
+                setSession(null);
+              }}
+              className="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
         <CommandCenter />
       </main>

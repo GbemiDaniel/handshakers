@@ -11,6 +11,7 @@ import Header from "@/components/Header";
 import { AccountProvider } from "@/context/AccountContext";
 import { supabase } from "@/utils/supabase";
 import { Sparkles, Loader2, Clock, Calculator } from "lucide-react";
+import Logo from "@/components/Logo";
 
 export default function WorkspacePage() {
   const params = useParams();
@@ -53,10 +54,10 @@ export default function WorkspacePage() {
   // Brief clean loading state while verifying initial auth session
   if (loading) {
     return (
-      <main className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-slate-200/80 shadow-sm">
-          <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-          <span className="text-sm font-medium text-slate-600">Verifying session...</span>
+      <main className="min-h-screen bg-slate-50 dark:bg-[#0B0F19] flex items-center justify-center">
+        <div className="flex items-center gap-3 bg-white dark:bg-slate-900 px-5 py-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+          <Loader2 className="w-5 h-5 animate-spin text-blue-600 dark:text-blue-400" />
+          <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Verifying session...</span>
         </div>
       </main>
     );
@@ -65,17 +66,16 @@ export default function WorkspacePage() {
   // Unauthenticated View: Render Auth.jsx centered on screen
   if (!session) {
     return (
-      <main className="min-h-screen bg-slate-50 text-slate-900 px-4 py-12 sm:px-6 lg:px-8 flex flex-col justify-center items-center">
+      <main className="min-h-screen bg-slate-50 dark:bg-[#0B0F19] text-slate-900 dark:text-slate-200 px-4 py-12 sm:px-6 lg:px-8 flex flex-col justify-center items-center">
         <div className="max-w-md mx-auto w-full space-y-6">
           <header className="text-center space-y-2.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-xs font-medium">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Handshakers Portal</span>
+            <div className="flex justify-center mb-6">
+              <Logo className="w-10 h-10" showText={true} />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
               Team Time Tracking
             </h1>
-            <p className="text-sm text-slate-500 max-w-sm mx-auto">
+            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
               Sign in to manage team time logs and prorated payout calculations.
             </p>
           </header>
@@ -89,7 +89,7 @@ export default function WorkspacePage() {
   // Authenticated Dashboard Layout with AccountProvider Context
   return (
     <AccountProvider session={session}>
-      <main className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+      <main className="min-h-screen bg-slate-50 dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
         {/* Dashboard Top Header */}
         <Header session={session} onSignOut={handleSignOut} />
 
@@ -100,14 +100,14 @@ export default function WorkspacePage() {
             <FuelGauge />
 
             {/* Segmented Control Tabs */}
-            <div className="bg-slate-200/80 backdrop-blur-sm p-1 rounded-xl flex items-center gap-1 text-xs font-medium border border-slate-200/60 shadow-inner">
+            <div className="bg-slate-200/80 dark:bg-slate-800/80 backdrop-blur-sm p-1 rounded-xl flex items-center gap-1 text-xs font-medium border border-slate-200/60 dark:border-slate-700/60 shadow-inner">
               <button
                 type="button"
                 onClick={() => setActiveTab("logger")}
-                className={`flex-1 py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                className={`flex-1 py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                   activeTab === "logger"
-                    ? "bg-white text-blue-600 font-semibold shadow-xs border border-slate-200/60"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
+                    ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs border border-slate-200/60 dark:border-slate-700"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
                 }`}
               >
                 <Clock className="w-4 h-4" />
@@ -117,10 +117,10 @@ export default function WorkspacePage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("calculator")}
-                className={`flex-1 py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                className={`flex-1 py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                   activeTab === "calculator"
-                    ? "bg-white text-blue-600 font-semibold shadow-xs border border-slate-200/60"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
+                    ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs border border-slate-200/60 dark:border-slate-700"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
                 }`}
               >
                 <Calculator className="w-4 h-4" />
@@ -129,7 +129,7 @@ export default function WorkspacePage() {
             </div>
 
             {/* Active Tab View Rendering synced with refreshKey */}
-            <div className="w-full animate-in fade-in duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]">
+            <div className="w-full animate-in fade-in duration-200 ease-in-out">
               {activeTab === "logger" ? (
                 <div className="space-y-6 w-full">
                   <TaskLogger session={session} onUpdate={handleUpdate} />
@@ -143,8 +143,10 @@ export default function WorkspacePage() {
         </div>
 
         {/* Dashboard Footer */}
-        <footer className="py-4 text-center text-xs text-slate-400 border-t border-slate-200/50 bg-slate-50">
-          <p>Handshakers MVP &bull; Minimalist Light Design System</p>
+        <footer className="w-full border-t border-slate-200/50 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
+          <p className="text-xs text-slate-500 dark:text-slate-400 text-center py-4">
+            Handshakers MVP &bull; Engineered by Dee
+          </p>
         </footer>
       </main>
     </AccountProvider>

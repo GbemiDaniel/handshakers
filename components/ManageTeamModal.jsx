@@ -71,6 +71,7 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
   }, [accountId, isOpen]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchMembers();
   }, [fetchMembers]);
 
@@ -161,10 +162,10 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
   return (
     <>
       {/* --- MAIN MODAL --- */}
-      <div className="fixed inset-0 z-[100]">
+      <div className="fixed inset-0 z-100">
         {/* Backdrop */}
         <div
-          className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] animate-in fade-in"
+          className="absolute inset-0 bg-slate-900/40 dark:bg-slate-950/70 backdrop-blur-sm transition-opacity duration-200 ease-in-out animate-in fade-in"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -172,38 +173,38 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
         {/* Centering Container */}
         <div className="flex items-center justify-center min-h-full p-4 sm:p-6 pointer-events-none">
           {/* Modal Card */}
-          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl pointer-events-auto flex flex-col max-h-[90vh] overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]">
+          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl pointer-events-auto flex flex-col max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-200 ease-in-out">
 
           {/* Header */}
-          <div className="flex items-center justify-between p-5 border-b border-slate-100 shrink-0 bg-white z-20">
+          <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900 z-20">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/80 border border-blue-100 dark:border-blue-800/60 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
                 <Users className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-base font-bold text-slate-900 tracking-tight truncate">
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight truncate">
                   Manage Workspace Team
                 </h3>
-                <p className="text-xs text-slate-500 truncate">
-                  Workspace: <span className="font-medium text-slate-700">{accountName}</span>
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                  Workspace: <span className="font-medium text-slate-700 dark:text-slate-200">{accountName}</span>
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 shrink-0"
+              className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-150 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 shrink-0"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-6 bg-slate-50/30">
+          <div className="flex-1 overflow-y-auto p-5 space-y-6 bg-slate-50/30 dark:bg-slate-950/40">
 
             {/* Add Member Form */}
-            <div className="space-y-3 bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm">
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                <UserPlus className="w-3.5 h-3.5 text-blue-600" />
+            <div className="space-y-3 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                <UserPlus className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 <span>Add Member to Workspace</span>
               </div>
               <form onSubmit={handleAddMember} className="flex flex-col sm:flex-row gap-3">
@@ -211,7 +212,7 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
                   value={selectedUserId}
                   onChange={(e) => setSelectedUserId(e.target.value)}
                   disabled={availableProfiles.length === 0 || isAdding}
-                  className="flex-1 h-11 px-3 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors disabled:opacity-50 min-w-0"
+                  className="flex-1 h-11 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors disabled:opacity-50 min-w-0"
                 >
                   {availableProfiles.length === 0 ? (
                     <option value="">No available profiles to add</option>
@@ -226,7 +227,7 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
                 <button
                   type="submit"
                   disabled={!selectedUserId || isAdding}
-                  className="h-11 px-6 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 text-white text-xs font-semibold rounded-xl shadow-sm transition-colors shrink-0 flex items-center justify-center gap-1.5 focus:outline-none w-full sm:w-auto"
+                  className="h-11 px-6 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors shrink-0 flex items-center justify-center gap-1.5 focus:outline-none w-full sm:w-auto"
                 >
                   {isAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : <><UserPlus className="w-4 h-4" /><span>Add</span></>}
                 </button>
@@ -235,45 +236,45 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
 
             {/* Member List */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider px-1">
+              <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-1">
                 <div className="flex items-center gap-2">
                   <span>Workspace Members</span>
-                  <span className="bg-slate-100 px-2 py-0.5 rounded-full text-slate-600">{displayedMembers.length}</span>
+                  <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full text-slate-600 dark:text-slate-300">{displayedMembers.length}</span>
                 </div>
                 <button
                   onClick={() => setShowInactive(!showInactive)}
-                  className="text-slate-400 hover:text-slate-700 capitalize flex items-center gap-1 transition-colors"
+                  className="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 capitalize flex items-center gap-1 transition-colors"
                 >
                   {showInactive ? "Hide Inactive" : "Show Inactive"}
                 </button>
               </div>
 
               {isLoading ? (
-                <div className="py-8 flex items-center justify-center gap-2 text-slate-400 text-xs">
-                  <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                <div className="py-8 flex items-center justify-center gap-2 text-slate-400 dark:text-slate-500 text-xs">
+                  <Loader2 className="w-4 h-4 animate-spin text-blue-600 dark:text-blue-400" />
                   <span>Loading members...</span>
                 </div>
               ) : displayedMembers.length === 0 ? (
-                <div className="py-6 text-center text-xs text-slate-400 border border-slate-200/60 rounded-xl bg-white shadow-sm">
+                <div className="py-6 text-center text-xs text-slate-400 dark:text-slate-500 border border-slate-200/60 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-xs">
                   No members found.
                 </div>
               ) : (
-                <div className="overflow-y-auto max-h-[40vh] p-4 space-y-2.5 bg-white border border-slate-200/60 rounded-xl shadow-sm">
+                <div className="overflow-y-auto max-h-[40vh] p-4 space-y-2.5 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-xl shadow-xs">
                   {displayedMembers.map((member) => (
                     <div
                       key={member.id}
-                      className={`flex items-center justify-between p-3 bg-slate-50 border rounded-xl transition-all gap-3 ${member.status === 'inactive' ? 'border-dashed border-slate-200 opacity-60 grayscale-[0.5]' : 'border-slate-100 hover:border-slate-300'
+                      className={`flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 border rounded-xl transition-all gap-3 ${member.status === 'inactive' ? 'border-dashed border-slate-200 dark:border-slate-700 opacity-60 grayscale-[0.5]' : 'border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                         }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 text-xs font-semibold shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 text-xs font-semibold shrink-0">
                           {member.role === 'admin' ? <Shield className="w-4 h-4" /> : <User className="w-4 h-4" />}
                         </div>
                         <div className="min-w-0">
-                          <div className="text-xs font-semibold text-slate-900 truncate">
+                          <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
                             {member.full_name}
                           </div>
-                          <div className="text-[10px] text-slate-400 truncate">
+                          <div className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
                             ID: {member.user_id.slice(0, 8)}...
                           </div>
                         </div>
@@ -281,11 +282,11 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
 
                       <div className="flex items-center gap-2.5 shrink-0">
                         {member.status === 'inactive' && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-semibold bg-slate-200 text-slate-600 uppercase tracking-wider">
+                          <span className="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-semibold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                             Inactive
                           </span>
                         )}
-                        <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-white text-slate-600 border border-slate-200 capitalize">
+                        <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 capitalize">
                           <Shield className="w-2.5 h-2.5" />
                           {member.role}
                         </span>
@@ -295,7 +296,7 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
                             type="button"
                             onClick={() => handleReactivateMember(member.id, member.full_name)}
                             disabled={isActionLoading}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 transition-colors disabled:opacity-50 text-xs font-bold shadow-sm focus:outline-none"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-100 dark:border-emerald-800/60 transition-colors disabled:opacity-50 text-xs font-bold shadow-xs focus:outline-none"
                             title="Reactivate member"
                           >
                             {isActionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
@@ -306,7 +307,7 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
                             type="button"
                             onClick={() => setMemberToRemove({ id: member.id, full_name: member.full_name })}
                             disabled={isActionLoading}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-50 focus:outline-none"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors disabled:opacity-50 focus:outline-none"
                             title="Remove member"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -321,11 +322,11 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
           </div>
 
           {/* Footer */}
-          <div className="px-5 py-4 border-t border-slate-100 bg-white shrink-0 flex justify-end z-20">
+          <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 flex justify-end z-20">
             <button
               type="button"
               onClick={onClose}
-              className="h-10 px-6 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition-colors focus:outline-none"
+              className="h-10 px-6 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-xl transition-colors focus:outline-none"
             >
               Done
             </button>
@@ -336,33 +337,33 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
 
       {/* --- CUSTOM DELETE CONFIRMATION MODAL --- */}
       {memberToRemove && (
-        <div className="fixed inset-0 z-[110]">
+        <div className="fixed inset-0 z-110">
           <div
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200"
+            className="absolute inset-0 bg-slate-900/40 dark:bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200"
             onClick={() => setMemberToRemove(null)}
           />
           <div className="flex items-center justify-center min-h-full p-4 sm:p-6 pointer-events-none">
-            <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl pointer-events-auto p-6 animate-in zoom-in-95 duration-200 border border-slate-100">
+            <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl shadow-2xl pointer-events-auto p-6 animate-in zoom-in-95 duration-200 border border-slate-100 dark:border-slate-800">
             <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center mb-4 text-rose-600 shrink-0">
+              <div className="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/60 flex items-center justify-center mb-4 text-rose-600 dark:text-rose-400 shrink-0 border border-transparent dark:border-rose-900/60">
                 <AlertTriangle className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-1 tracking-tight">Remove Member?</h3>
-              <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-                Are you sure you want to remove <span className="font-semibold text-slate-700">{memberToRemove.full_name}</span> from {accountName}? They will lose access to this workspace.
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1 tracking-tight">Remove Member?</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+                Are you sure you want to remove <span className="font-semibold text-slate-700 dark:text-slate-200">{memberToRemove.full_name}</span> from {accountName}? They will lose access to this workspace.
               </p>
 
               <div className="flex flex-col-reverse sm:flex-row gap-3 w-full">
                 <button
                   onClick={() => setMemberToRemove(null)}
-                  className="flex-1 h-11 sm:h-10 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-xl transition-colors focus:outline-none"
+                  className="flex-1 h-11 sm:h-10 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm rounded-xl transition-colors focus:outline-none"
                   disabled={isActionLoading}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmRemoveMember}
-                  className="flex-1 h-11 sm:h-10 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2 focus:outline-none"
+                  className="flex-1 h-11 sm:h-10 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 focus:outline-none"
                   disabled={isActionLoading}
                 >
                   {isActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Yes, Remove"}

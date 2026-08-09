@@ -126,7 +126,7 @@ export default function TimelineVisualizer({
       title="Team Time Log Timeline"
       subtitle="Visual breakdown of individual time logs across the total timeline"
       headerAction={
-        <div className="flex items-center gap-2 text-xs font-medium text-slate-500 bg-slate-100/80 px-3 py-1.5 rounded-xl border border-slate-200/60">
+        <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-300 bg-slate-100/80 dark:bg-slate-800/50 px-3 py-1.5 rounded-xl border border-slate-200/60 dark:border-slate-700">
           <Clock className="w-3.5 h-3.5 text-slate-400" />
           <span>Max Duration: {formatDuration(maxScaleMinutes)}</span>
         </div>
@@ -136,7 +136,7 @@ export default function TimelineVisualizer({
         {/* Main Timeline Bar Container */}
         <div className="relative pt-2 pb-1">
           {/* Background Track Bar */}
-          <div className="relative h-10 w-full bg-slate-100/90 border border-slate-200/80 rounded-2xl overflow-hidden shadow-inner flex items-center">
+          <div className="relative h-10 w-full bg-slate-100/90 dark:bg-slate-900/50! border border-slate-200/80 dark:border-slate-800! rounded-2xl overflow-hidden shadow-inner flex items-center">
             {validLogs.length === 0 ? (
               <div className="w-full text-center text-xs font-medium text-slate-400 select-none flex items-center justify-center gap-1.5">
                 <Info className="w-3.5 h-3.5" />
@@ -166,9 +166,9 @@ export default function TimelineVisualizer({
                       width: `${Math.max(widthPct, 0.5)}%`,
                       minWidth: "4px",
                     }}
-                    className={`absolute top-1 bottom-1 rounded-lg cursor-pointer min-w-[4px] transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${colorBgClass} ${theme.hoverBg} ${
+                    className={`absolute top-1 bottom-1 rounded-lg cursor-pointer min-w-1 transition-all duration-200 ease-in-out outline-none border border-white dark:border-[#0f172a]! focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${colorBgClass} ${theme.hoverBg} ${
                       isHovered
-                        ? "ring-2 ring-white ring-offset-2 ring-offset-blue-600 scale-y-110 z-20 shadow-md"
+                        ? "ring-2 ring-white dark:ring-[#0f172a]! ring-offset-2 ring-offset-blue-600 scale-y-110 z-20 shadow-md"
                         : "z-10 opacity-90 hover:opacity-100"
                     }`}
                     aria-label={`Time log segment for ${userName}`}
@@ -179,7 +179,7 @@ export default function TimelineVisualizer({
           </div>
 
           {/* Scale Axis Markers (0%, 25%, 50%, 75%, 100%) */}
-          <div className="mt-2 flex justify-between text-[10px] font-semibold text-slate-400 tracking-wider uppercase select-none px-0.5 font-mono tabular-nums">
+          <div className="mt-2 flex justify-between text-[10px] font-semibold text-slate-400 dark:text-slate-500 tracking-wider uppercase select-none px-0.5 font-mono tabular-nums">
             <span>0m</span>
             <span>{formatDuration(maxScaleMinutes * 0.25)}</span>
             <span>{formatDuration(maxScaleMinutes * 0.5)}</span>
@@ -195,10 +195,10 @@ export default function TimelineVisualizer({
               left: `${tooltipPos.x}px`,
               top: `${tooltipPos.y - 12}px`,
             }}
-            className="fixed -translate-x-1/2 -translate-y-full z-50 pointer-events-none transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] animate-in fade-in zoom-in-95"
+            className="fixed -translate-x-1/2 -translate-y-full z-50 pointer-events-none transition-all duration-200 ease-in-out animate-in fade-in zoom-in-95"
           >
-            <div className="bg-slate-900/95 backdrop-blur-md text-white text-xs rounded-xl p-3 shadow-xl border border-slate-800 space-y-1.5 min-w-[200px]">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+            <div className="bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md text-white text-xs rounded-xl p-3 shadow-xl border border-slate-800 dark:border-slate-700 space-y-1.5 min-w-50">
+              <div className="flex items-center justify-between border-b border-slate-800 dark:border-slate-800 pb-1.5">
                 <span className="font-semibold text-slate-100 truncate">
                   {profilesMap[hoveredLog.user_id] || `User (${hoveredLog.user_id.slice(0, 6)})`}
                 </span>
@@ -228,15 +228,15 @@ export default function TimelineVisualizer({
               </div>
             </div>
             {/* Tooltip Arrow */}
-            <div className="w-2.5 h-2.5 bg-slate-900/95 rotate-45 mx-auto -mt-1.5 border-r border-b border-slate-800" />
+            <div className="w-2.5 h-2.5 bg-slate-900/95 dark:bg-slate-950/95 rotate-45 mx-auto -mt-1.5 border-r border-b border-slate-800 dark:border-slate-700" />
           </div>
         )}
 
         {/* Clean Team Members Legend (Responsive Flex-Wrap for Mobile) */}
         {userLegendData.length > 0 && (
-          <div className="pt-4 border-t border-slate-100 min-w-0">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-              <Users className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 min-w-0">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
+              <Users className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
               <span>Team Member Legend</span>
             </div>
             {/* Flex Wrap Container for Mobile Viewports */}
@@ -246,13 +246,13 @@ export default function TimelineVisualizer({
                 return (
                   <div
                     key={item.userId}
-                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium max-w-full min-w-0 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] ${item.theme.badgeBg}`}
+                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium max-w-full min-w-0 transition-all duration-200 ease-in-out dark:bg-slate-800/30! dark:border-slate-700! dark:text-slate-300! ${item.theme.badgeBg}`}
                   >
                     <span className={`w-2.5 h-2.5 rounded-full ${item.colorClass} ${item.theme.shadow} shadow-xs shrink-0`} />
-                    <span className={`font-semibold truncate min-w-0 max-w-[140px] sm:max-w-[200px] ${item.theme.text}`} title={item.name}>
+                    <span className={`font-semibold truncate min-w-0 max-w-35 sm:max-w-50 ${item.theme.text} dark:text-slate-300!`} title={item.name}>
                       {item.name}
                     </span>
-                    <span className="text-slate-400 font-normal font-mono tabular-nums shrink-0">
+                    <span className="text-slate-400 dark:text-slate-400 font-normal font-mono tabular-nums shrink-0">
                       ({formatDuration(item.totalDuration)} • {sharePct}%)
                     </span>
                   </div>

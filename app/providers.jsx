@@ -2,9 +2,10 @@
 
 import { SWRConfig } from "swr";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 /**
- * Global SWR configuration provider.
+ * Global SWR and Theme configuration provider.
  *
  * - dedupingInterval: 0
  *   Prevents SWR from silently skipping poll cycles. The default (2000ms)
@@ -18,14 +19,16 @@ import { Toaster } from "sonner";
  */
 export default function Providers({ children }) {
   return (
-    <SWRConfig
-      value={{
-        dedupingInterval: 0,
-        refreshWhenHidden: true,
-      }}
-    >
-      <Toaster position="bottom-right" richColors />
-      {children}
-    </SWRConfig>
+    <ThemeProvider>
+      <SWRConfig
+        value={{
+          dedupingInterval: 0,
+          refreshWhenHidden: true,
+        }}
+      >
+        <Toaster position="bottom-right" richColors />
+        {children}
+      </SWRConfig>
+    </ThemeProvider>
   );
 }

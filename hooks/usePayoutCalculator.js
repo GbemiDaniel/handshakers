@@ -191,95 +191,96 @@ export function usePayoutCalculator({ session }) {
     }
   }, [hasPreviousData]);
 
-  const { teamLogs, currentCycleTotalMinutes, remainingMinutes } = useMemo(() => {
-    if (!data?.logs) return { teamLogs: [], currentCycleTotalMinutes: 0, remainingMinutes: 4800 };
+    const logs = data?.logs;
+    const profiles = data?.profiles;
+    const members = data?.members;
 
-    const sortedLogs = [...data.logs].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-    
-    let previousCycleLogs = [];
-    let currentCycleLogs = [];
-    let hasCrossedToCurrent = false;
-    let previousLog = null;
+    const { teamLogs, currentCycleTotalMinutes, remainingMinutes } = useMemo(() => {
+      if (!logs) return { teamLogs: [], currentCycleTotalMinutes: 0, remainingMinutes: 4800 };
 
-    for (let i = 0; i < sortedLogs.length; i++) {
-      const log = sortedLogs[i];
-      const logTime = new Date(log.created_at).getTime();
+      const sortedLogs = [...logs].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
       
-      if (!hasCrossedToCurrent) {
-        let triggerNewCycle = false;
+      let previousCycleLogs = [];
+      let currentCycleLogs = [];
+      let hasCrossedToCurrent = false;
+      let previousLog = null;
+
+      for (let i = 0; i < sortedLogs.length; i++) {
+        const log = sortedLogs[i];
+        const logTime = new Date(log.created_at).getTime();
         
-        // Condition A (The Hard Cutoff)
-        if (logTime >= pacificNoonUTC) {
-          triggerNewCycle = true;
-        } 
-        // Condition B (The Buffer Zone)
-        else if (logTime >= pacificMidnightUTC && logTime < pacificNoonUTC) {
-          if (previousLog && previousLog.is_end_of_day === true) {
+        if (!hasCrossedToCurrent) {
+          let triggerNewCycle = false;
+          
+          // Condition A (The Hard Cutoff)
+          if (logTime >= pacificNoonUTC) {
             triggerNewCycle = true;
           } 
-          // Condition C (The Zero-Drop Failsafe)
-          else if (previousLog && log.start_minutes < previousLog.stop_minutes) {
-            triggerNewCycle = true;
+          // Condition B (The Buffer Zone)
+          else if (logTime >= pacificMidnightUTC && logTime < pacificNoonUTC) {
+            if (previousLog && previousLog.is_end_of_day === true) {
+              triggerNewCycle = true;
+            } 
+            // Condition C (The Zero-Drop Failsafe)
+            else if (previousLog && log.start_minutes < previousLog.stop_minutes) {
+              triggerNewCycle = true;
+            }
+          }
+          
+          if (triggerNewCycle) {
+            hasCrossedToCurrent = true;
           }
         }
         
-        if (triggerNewCycle) {
-          hasCrossedToCurrent = true;
+        if (hasCrossedToCurrent) {
+          currentCycleLogs.push(log);
+        } else {
+          previousCycleLogs.push(log);
         }
+        
+        previousLog = log;
       }
-      
-      if (hasCrossedToCurrent) {
-        currentCycleLogs.push(log);
+
+      let currentTotal = 0;
+      currentCycleLogs.forEach((log) => {
+        const duration = (log.stop_minutes || 0) - (log.start_minutes || 0);
+        if (duration > 0) {
+          currentTotal += duration;
+        }
+      });
+
+      let returnedLogs = [];
+      if (payCycle === 'current') {
+        returnedLogs = currentCycleLogs;
       } else {
-        previousCycleLogs.push(log);
+        const previousWeekStart = pacificMidnightUTC - (7 * 24 * 60 * 60 * 1000);
+        returnedLogs = previousCycleLogs.filter(log => new Date(log.created_at).getTime() >= previousWeekStart);
       }
       
-      previousLog = log;
-    }
+      return {
+        teamLogs: returnedLogs,
+        currentCycleTotalMinutes: currentTotal,
+        remainingMinutes: 4800 - currentTotal
+      };
+    }, [logs, payCycle, pacificMidnightUTC, pacificNoonUTC]);
 
-    let currentTotal = 0;
-    currentCycleLogs.forEach((log) => {
-      const duration = (log.stop_minutes || 0) - (log.start_minutes || 0);
-      if (duration > 0) {
-        currentTotal += duration;
-      }
-    });
+    const profilesMap = useMemo(() => {
+      if (!profiles) return {};
+      const map = {};
+      profiles.forEach((p) => {
+        map[p.id] = p.full_name || `Member (${p.id.slice(0, 6)})`;
+      });
+      return map;
+    }, [profiles]);
 
-    let returnedLogs = [];
-    if (payCycle === 'current') {
-      returnedLogs = currentCycleLogs;
-    } else {
-      const previousWeekStart = pacificMidnightUTC - (7 * 24 * 60 * 60 * 1000);
-      returnedLogs = previousCycleLogs.filter(log => new Date(log.created_at).getTime() >= previousWeekStart);
-    }
-    
-    return {
-      teamLogs: returnedLogs,
-      currentCycleTotalMinutes: currentTotal,
-      remainingMinutes: 4800 - currentTotal
-    };
-    // eslint-disable-next-line react-hooks/preserve-manual-memoization
-  }, [data?.logs, payCycle, pacificMidnightUTC, pacificNoonUTC]);
-
-  const profilesMap = useMemo(() => {
-    if (!data?.profiles) return {};
-    const map = {};
-    data.profiles.forEach((p) => {
-      map[p.id] = p.full_name || `Member (${p.id.slice(0, 6)})`;
-    });
-    return map;
-    // eslint-disable-next-line react-hooks/preserve-manual-memoization
-  }, [data?.profiles]);
-
-  const statusMap = useMemo(() => {
-    if (!data?.members) return {};
-    const map = {};
-    data.members.forEach((m) => {
-      map[m.user_id] = m.status;
-    });
-    return map;
-    // eslint-disable-next-line react-hooks/preserve-manual-memoization
-  }, [data?.members]);
+    const statusMap = useMemo(() => {
+      if (!members) return {};
+      const map = {};
+      members.forEach((m) => {
+        map[m.user_id] = m.status;
+      });
+      return map;
+    }, [members]);
 
   const { teamTotalMinutes, userTotals } = useMemo(() => {
     if (!teamLogs) return { teamTotalMinutes: 0, userTotals: {} };

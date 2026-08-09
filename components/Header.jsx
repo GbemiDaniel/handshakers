@@ -2,13 +2,25 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/utils/supabase";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Menu, X } from "lucide-react";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import { useAccount } from "@/context/AccountContext";
+import WorkspaceManagerModal from "./WorkspaceManagerModal";
+import ManageTeamModal from "./ManageTeamModal";
+import { Plus, Users, LayoutDashboard } from "lucide-react";
+import Logo from "./Logo";
 import ProfileSettings from "./ProfileSettings";
 import AccountSwitcher from "./AccountSwitcher";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Header({ session, onSignOut }) {
   const [userName, setUserName] = useState("");
   const [isProfileSettingsOpen, setIsProfileSettingsOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isManagerModalOpen, setIsManagerModalOpen] = useState(false);
+  const [isManageTeamModalOpen, setIsManageTeamModalOpen] = useState(false);
+  const { isSuperAdmin, activeAccount, refreshAccounts } = useAccount();
 
   const fetchName = useCallback(async () => {
     if (session?.user?.id) {
@@ -21,56 +33,158 @@ export default function Header({ session, onSignOut }) {
         setUserName(data.full_name);
       }
     }
-  }, [session?.user?.id]);
+  }, [session]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchName();
   }, [fetchName]);
+
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
 
   const displayName = userName || session?.user?.email?.split("@")[0] || "Team Member";
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-md border-b border-slate-200/60 shadow-sm transition-all">
-        <div className="flex items-center justify-between px-4 sm:px-6 md:px-8 h-14 sm:h-16 max-w-7xl mx-auto">
-          {/* Logo & Workspace Switcher */}
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-xs">
-              H
-            </div>
-            <span className="text-base font-semibold text-slate-900 tracking-tight hidden md:inline">
-              Handshakers
-            </span>
-            <span className="text-slate-300 hidden md:inline">/</span>
-            <AccountSwitcher />
+      <header className="sticky top-0 z-40 w-full border-b border-slate-200/60 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/80 backdrop-blur-md transition-colors duration-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+          {/* Left Zone: Context & Navigation */}
+          <div className="flex items-center gap-4 sm:gap-6 min-w-0">
+            <Link
+              href="/"
+              className="group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg shrink-0"
+              title="Global Dashboard"
+            >
+              <Logo className="w-[clamp(1.25rem,2.5vw,1.75rem)] h-[clamp(1.25rem,2.5vw,1.75rem)] group-hover:scale-105 transition-transform duration-200" showText={true} />
+            </Link>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button
+          {/* Right Zone: Switcher, Settings & Profile */}
+          <div className="flex items-center gap-3 md:gap-4">
+            <div className="hidden md:block">
+              <AccountSwitcher />
+            </div>
+
+            <ThemeToggle />
+
+            {/* Desktop Settings (Hidden on Mobile) */}
+            <div className="hidden md:flex items-center gap-3 md:gap-4">
+
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               type="button"
               onClick={() => setIsProfileSettingsOpen(true)}
-              className="flex items-center gap-2 sm:gap-3 p-1 sm:pr-3 sm:bg-slate-50/80 sm:border sm:border-slate-200/80 rounded-full cursor-pointer hover:bg-slate-100/90 active:scale-[0.98] transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
+              className="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               title="Open Profile Settings"
+              aria-label="User Profile Settings"
             >
-              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0">
-                <User className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-              </div>
-              <span className="hidden sm:block text-sm font-medium text-slate-700 truncate max-w-[120px] md:max-w-[200px]">
-                {displayName}
-              </span>
-            </button>
+              <User className="w-5 h-5" />
+            </motion.button>
 
-            <button
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               type="button"
               onClick={onSignOut}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 active:scale-[0.97] transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
+              className="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              title="Sign Out"
+              aria-label="Sign Out"
             >
-              <LogOut className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-              <span className="hidden sm:inline">Sign Out</span>
-            </button>
+              <LogOut className="w-5 h-5" />
+            </motion.button>
+          </div>
+
+            {/* Mobile Menu Toggle Button */}
+            <div className="flex md:hidden items-center">
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                type="button"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg"
+                aria-label="Toggle Mobile Menu"
+              >
+                {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </motion.button>
+            </div>
           </div>
         </div>
       </header>
+
+      {/* Mobile Menu Sheet */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="md:hidden fixed top-16 left-0 right-0 z-30 bg-white/90 backdrop-blur-md dark:bg-[#0B0F19]/95 border-t border-slate-200/60 dark:border-slate-800 shadow-xl"
+          >
+            <div className="flex flex-col px-0 py-6 gap-6">
+              <AccountSwitcher isMobile={true} />
+              
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsProfileSettingsOpen(true);
+                }}
+                className="flex items-center gap-4 w-full px-6 py-3 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors focus:outline-none"
+              >
+                <User className="w-5 h-5 shrink-0" />
+                <span>Profile Settings</span>
+              </button>
+
+              {isSuperAdmin && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setIsManageTeamModalOpen(true);
+                    }}
+                    className="flex items-center gap-4 px-6 py-3 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors w-full focus:outline-none"
+                  >
+                    <Users className="w-5 h-5 shrink-0" />
+                    <span>Manage Team</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setIsManagerModalOpen(true);
+                    }}
+                    className="flex items-center gap-4 px-6 py-3 text-sm font-medium text-blue-500 dark:text-blue-400 hover:bg-blue-50/80 dark:hover:bg-blue-950/40 transition-colors w-full focus:outline-none"
+                  >
+                    <Plus className="w-5 h-5 shrink-0" />
+                    <span>Create Workspace</span>
+                  </button>
+                </>
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onSignOut();
+                }}
+                className="flex items-center gap-4 px-6 py-3 text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors w-full focus:outline-none"
+              >
+                <LogOut className="w-5 h-5 shrink-0" />
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Profile Settings Slide-out Drawer */}
       <ProfileSettings
@@ -78,6 +192,20 @@ export default function Header({ session, onSignOut }) {
         onClose={() => setIsProfileSettingsOpen(false)}
         session={session}
         onProfileUpdate={fetchName}
+      />
+      
+      {/* Workspace Manager Modal */}
+      <WorkspaceManagerModal
+        isOpen={isManagerModalOpen}
+        onClose={() => setIsManagerModalOpen(false)}
+        onAccountCreated={refreshAccounts}
+      />
+
+      {/* Manage Team Modal */}
+      <ManageTeamModal
+        isOpen={isManageTeamModalOpen}
+        onClose={() => setIsManageTeamModalOpen(false)}
+        activeAccount={activeAccount}
       />
     </>
   );

@@ -309,7 +309,7 @@ export default function TaskLogger({ session, onUpdate }) {
       title="Log Team Time"
       subtitle="Enter your stop time to pass on to the next person. Logged times are auto-synced with the team."
       headerAction={
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-xs font-semibold whitespace-nowrap">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-100 dark:border-blue-800/60 text-blue-600 dark:text-blue-400 text-xs font-semibold whitespace-nowrap">
           <Sparkles className="w-3.5 h-3.5 shrink-0" />
           <span>{remainingPoolHours}h Pool Remaining</span>
         </div>
@@ -319,12 +319,12 @@ export default function TaskLogger({ session, onUpdate }) {
         {/* Input 1: Locked Start Time (Read-Only) */}
         <div className="w-full">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1.5">
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               LOCKED START TIME
             </label>
           </div>
           <div className="relative w-full">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
               <Lock className="w-4 h-4" />
             </div>
             <input
@@ -335,7 +335,7 @@ export default function TaskLogger({ session, onUpdate }) {
                   ? "Loading..."
                   : `${minutesToHHMMString(lockedStartMinutes)} (Auto-synced)`
               }
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-600 text-sm font-medium font-mono tabular-nums cursor-not-allowed select-none transition-colors"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-300 text-sm font-medium font-mono tabular-nums cursor-not-allowed select-none transition-colors"
             />
           </div>
         </div>
@@ -344,12 +344,12 @@ export default function TaskLogger({ session, onUpdate }) {
         <div className="w-full">
           <label
             htmlFor="stopTimeInput"
-            className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5"
+            className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5"
           >
             STOP TIME (HH:MM)
           </label>
           <div className="relative w-full">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
               <Clock className="w-4 h-4" />
             </div>
             <input
@@ -361,15 +361,15 @@ export default function TaskLogger({ session, onUpdate }) {
               onFocus={handleFocus}
               onBlur={handleBlur}
               disabled={isLockedByOther}
-              className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-medium font-mono tabular-nums focus:outline-none transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+              className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-medium font-mono tabular-nums focus:outline-none transition-all duration-200 ease-in-out ${
                 isLockedByOther 
-                  ? "cursor-not-allowed bg-slate-50 text-slate-500 border-slate-200 placeholder-slate-500 animate-pulse-glow" 
-                  : "bg-white text-slate-900 placeholder-slate-400 " + (fieldError ? "border-red-300 focus-visible:ring-2 focus-visible:ring-red-500" : "border-slate-200 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-1")
+                  ? "cursor-not-allowed bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 placeholder-slate-500 animate-pulse-glow" 
+                  : "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 " + (fieldError ? "border-red-300 dark:border-red-800 focus-visible:ring-2 focus-visible:ring-red-500" : "border-slate-200 dark:border-slate-700 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-1")
               }`}
             />
           </div>
           {fieldError && (
-            <span className="block text-xs font-medium text-red-500 mt-1.5 leading-snug">
+            <span className="block text-xs font-medium text-red-500 dark:text-red-400 mt-1.5 leading-snug">
               {fieldError}
             </span>
           )}
@@ -382,11 +382,11 @@ export default function TaskLogger({ session, onUpdate }) {
             type="checkbox"
             checked={isEndOfDay}
             onChange={(e) => setIsEndOfDay(e.target.checked)}
-            className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors cursor-pointer"
+            className="w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors cursor-pointer"
           />
           <label
             htmlFor="isEndOfDay"
-            className="text-sm font-medium text-slate-500 cursor-pointer select-none"
+            className="text-sm font-medium text-slate-500 dark:text-slate-400 cursor-pointer select-none"
           >
             Mark as final log for the day
           </label>
@@ -396,7 +396,7 @@ export default function TaskLogger({ session, onUpdate }) {
         <button
           type="submit"
           disabled={submitting || fetchingLatest}
-          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none text-white font-medium rounded-xl shadow-xs transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none text-white font-medium rounded-xl shadow-xs transition-all duration-200 ease-in-out flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
         >
           {submitting ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -410,12 +410,12 @@ export default function TaskLogger({ session, onUpdate }) {
 
         {/* Admin Rollback Utility Button (Rendered only for admins) */}
         {userRole === "admin" && (
-          <div className="pt-2 flex justify-center border-t border-slate-100">
+          <div className="pt-2 flex justify-center border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
               onClick={() => setShowRollbackModal(true)}
               disabled={rollingBack}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-red-500 hover:text-red-700 hover:bg-red-50/70 active:scale-[0.97] px-3 py-1.5 rounded-lg border border-red-200/70 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50/70 dark:hover:bg-red-950/40 active:scale-[0.97] px-3 py-1.5 rounded-lg border border-red-200/70 dark:border-red-900/60 transition-all duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
             >
               {rollingBack ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -432,35 +432,35 @@ export default function TaskLogger({ session, onUpdate }) {
 
       {/* Tailwind CSS Modal Overlay */}
       {showRollbackModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 dark:bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100 dark:border-slate-800">
             <div className="p-5 sm:p-6">
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center border border-red-200">
-                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                <div className="shrink-0 w-10 h-10 rounded-full bg-red-100 dark:bg-red-950/60 flex items-center justify-center border border-red-200 dark:border-red-900/60">
+                  <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
                 </div>
                 <div className="flex-1 mt-0.5">
-                  <h3 className="text-base font-semibold text-slate-900">
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
                     Confirm Rollback
                   </h3>
-                  <p className="mt-2 text-sm text-slate-500 leading-relaxed">
+                  <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                     Are you sure you want to delete the latest global team time log? This action cannot be undone and will reset the global start time.
                   </p>
                 </div>
               </div>
             </div>
-            <div className="bg-slate-50 px-5 py-4 sm:px-6 flex items-center justify-end gap-3 border-t border-slate-200/60">
+            <div className="bg-slate-50 dark:bg-slate-950/60 px-5 py-4 sm:px-6 flex items-center justify-end gap-3 border-t border-slate-200/60 dark:border-slate-800">
               <button
                 type="button"
                 onClick={() => setShowRollbackModal(false)}
-                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200"
+                className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200 dark:focus:ring-slate-700"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={confirmRollback}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-xl hover:bg-red-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 border border-transparent rounded-xl transition-colors shadow-xs focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
               >
                 Delete Entry
               </button>

@@ -1,13 +1,24 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark, .dark *));
+
 @layer base {
   :root {
-    --background: #f8fafc;
-    --foreground: #0f172a;
-    --muted: #64748b;
-    --border: #e2e8f0;
-    --card: #ffffff;
-    --primary: #2563eb;
+    /* Semantic Design Tokens - Light Theme */
+    --bg-canvas: #f8fafc;
+    --bg-surface: #ffffff;
+    --bg-surface-elevated: #ffffff;
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    --text-subtle: #94a3b8;
+    --border-subtle: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --accent-primary: #2563eb;
+    --status-success: #059669;
+    --status-warning: #d97706;
+    --status-danger: #dc2626;
+    --focus-ring: #2563eb;
+    --bg-overlay: rgba(15, 23, 42, 0.4);
     
     /* AGENTS.md Rule 1: Motion Timing & Bezier Curves */
     --ease-out-cubic: cubic-bezier(0.4, 0, 0.2, 1);
@@ -21,13 +32,32 @@
     --font-fluid-body: clamp(0.875rem, 1.5vw, 1rem);
   }
 
-  /* Force light theme background and crisp font rendering */
+  .dark {
+    /* Semantic Design Tokens - Intentional Dark Palette (Avoiding Pure Black #000000) */
+    --bg-canvas: #0b0f19;
+    --bg-surface: #111726;
+    --bg-surface-elevated: #161e31;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-subtle: #64748b;
+    --border-subtle: #1e293b;
+    --border-strong: #334155;
+    --accent-primary: #3b82f6;
+    --status-success: #34d399;
+    --status-warning: #fbbf24;
+    --status-danger: #f87171;
+    --focus-ring: #60a5fa;
+    --bg-overlay: rgba(3, 7, 18, 0.7);
+  }
+
+  /* Root canvas background & smooth theme transition */
   html, body {
-    background-color: var(--background);
-    color: var(--foreground);
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1), color 200ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 

@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { useAccount } from "@/context/AccountContext";
 import WorkspaceManagerModal from "./WorkspaceManagerModal";
 import ManageTeamModal from "./ManageTeamModal";
-import { Building, ChevronDown, Check, Loader2, Sparkles, Plus, Users } from "lucide-react";
+import { Building, ChevronDown, Check, Loader2, Sparkles, Plus, Users, LayoutDashboard, Folder } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
-export default function AccountSwitcher() {
+export default function AccountSwitcher({ isMobile = false }) {
   const router = useRouter();
   const {
     activeAccount,
@@ -18,6 +19,7 @@ export default function AccountSwitcher() {
   } = useAccount();
 
   const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [isManagerModalOpen, setIsManagerModalOpen] = useState(false);
   const [isManageTeamModalOpen, setIsManageTeamModalOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -35,8 +37,8 @@ export default function AccountSwitcher() {
 
   if (isLoadingAccounts) {
     return (
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100/80 border border-slate-200/80 rounded-xl text-xs font-medium text-slate-400">
-        <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+      <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 rounded-xl text-xs font-medium text-slate-400">
+        <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600 dark:text-blue-400" />
         <span>Loading account...</span>
       </div>
     );
@@ -46,82 +48,129 @@ export default function AccountSwitcher() {
 
   return (
     <>
-      <div className="relative inline-block text-left" ref={dropdownRef}>
+      <div className={`relative text-left ${isMobile ? 'block w-full' : 'inline-block'}`} ref={dropdownRef}>
         {/* Account Switcher Trigger Button */}
         <button
           type="button"
-          onClick={() => setIsOpen((prev) => !prev)}
-          className="inline-flex items-center gap-2 px-2.5 py-1.5 bg-slate-100/90 hover:bg-slate-200/80 active:scale-[0.98] border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
+          onClick={() => isMobile ? setIsExpanded((prev) => !prev) : setIsOpen((prev) => !prev)}
+          className={
+            isMobile 
+              ? "w-full flex items-center justify-between px-6 py-3 text-sm font-medium text-slate-600 dark:text-slate-400 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors focus:outline-none"
+              : "inline-flex items-center gap-2 px-2.5 py-1.5 bg-slate-100/90 dark:bg-slate-800/90 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 active:scale-[0.98] border border-slate-200 dark:border-slate-700 rounded-xl text-[clamp(0.75rem,1vw,0.875rem)] font-semibold text-slate-800 dark:text-slate-200 transition-all duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
+          }
           aria-haspopup="true"
           aria-expanded={isOpen}
         >
-          <div className="w-5 h-5 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-            <Building className="w-3 h-3" />
+          <div className={`flex items-center ${isMobile ? 'gap-4' : 'gap-2'} min-w-0`}>
+            {!isMobile && (
+              <div className="w-5 h-5 rounded-lg bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 border border-transparent dark:border-blue-800/60 flex items-center justify-center shrink-0">
+                <Building className="w-3 h-3" />
+              </div>
+            )}
+            {isMobile && <Folder className="w-5 h-5 shrink-0" />}
+            <span className={isMobile ? "truncate" : "truncate max-w-30 sm:max-w-40"}>
+              {isMobile ? "Workspaces" : accountName}
+            </span>
           </div>
-          <span className="truncate max-w-[120px] sm:max-w-[160px]">{accountName}</span>
-          <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] ${isOpen ? "rotate-180" : ""}`} />
+          <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ease-in-out ${(isMobile ? isExpanded : isOpen) ? "rotate-180" : ""}`} />
         </button>
 
-        {/* Dropdown Menu */}
-        {isOpen && (
-          <div className="absolute left-0 mt-2 w-56 rounded-2xl bg-white border border-slate-200/90 shadow-xl z-[70] py-1.5 animate-in fade-in zoom-in-95 duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]">
-            <div className="px-3 py-1.5 border-b border-slate-100 flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Workspaces / Accounts
-              </span>
-              <Sparkles className="w-3 h-3 text-blue-500" />
-            </div>
+        {/* Dropdown / Accordion Menu */}
+        {(isOpen || isMobile) && (
+          <div className={
+            isMobile 
+              ? "mt-1 w-full flex flex-col" 
+              : "absolute left-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xl z-70 py-1.5 animate-in fade-in zoom-in-95 duration-200 ease-in-out"
+          }>
+            {!isMobile && (
+              <div className="px-3 py-1.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Workspaces / Accounts
+                </span>
+                <Sparkles className="w-3 h-3 text-blue-500 dark:text-blue-400" />
+              </div>
+            )}
 
-            <div className="max-h-60 overflow-y-auto py-1">
-              {accounts.length === 0 ? (
-                <div className="px-3 py-2 text-xs text-slate-400 text-center">
-                  No accounts available
-                </div>
-              ) : (
-                accounts.map((account) => {
-                  const isSelected = activeAccount?.id === account.id;
-                  const name = account.account_name || account.name || `Account (${account.id.slice(0, 6)})`;
-                  return (
-                    <button
-                      key={account.id}
-                      type="button"
-                      onClick={() => {
-                        router.push(`/workspace/${account.id}`);
-                        setIsOpen(false);
-                      }}
-                      className={`w-full flex items-center justify-between px-3 py-2 text-xs font-medium transition-colors duration-150 ease-[cubic-bezier(0.4,0,0.2,1)] text-left focus:outline-none focus-visible:bg-blue-50/80 ${
-                        isSelected
-                          ? "bg-blue-50/80 text-blue-700 font-semibold"
-                          : "text-slate-700 hover:bg-slate-50"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 transition-colors ${
-                          isSelected ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-500"
-                        }`}>
-                          <Building className="w-3 h-3" />
-                        </div>
-                        <span className="truncate">{name}</span>
+            <AnimatePresence>
+              {(!isMobile || isExpanded) && (
+                <motion.div
+                  initial={isMobile ? { height: 0, opacity: 0 } : false}
+                  animate={isMobile ? { height: "auto", opacity: 1 } : false}
+                  exit={isMobile ? { height: 0, opacity: 0 } : false}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  className={isMobile ? "overflow-hidden" : ""}
+                >
+                  <div className={`overflow-y-auto py-1 ${isMobile ? 'max-h-48 border-l-2 border-slate-200 dark:border-slate-700 ml-8 mt-2 space-y-1' : 'max-h-60'}`}>
+                    {accounts.length === 0 ? (
+                      <div className="px-3 py-2 text-xs text-slate-400 dark:text-slate-500 text-center">
+                        No accounts available
                       </div>
-                      {isSelected && <Check className="w-3.5 h-3.5 text-blue-600 shrink-0" />}
-                    </button>
-                  );
-                })
+                    ) : (
+                      (isMobile ? accounts.slice(0, 3) : accounts).map((account) => {
+                        const isSelected = activeAccount?.id === account.id;
+                        const name = account.account_name || account.name || `Account (${account.id.slice(0, 6)})`;
+                        return (
+                          <button
+                            key={account.id}
+                            type="button"
+                            onClick={() => {
+                              router.push(`/workspace/${account.id}`);
+                              setIsOpen(false);
+                              setIsExpanded(false);
+                            }}
+                            className={`w-full flex items-center justify-between py-2 transition-colors duration-150 ease-in-out text-left focus:outline-none ${
+                              isMobile
+                                ? `pl-5 pr-8 text-sm font-medium ${isSelected ? "text-blue-400" : "text-slate-400 hover:text-white"}`
+                                : `px-3 text-xs font-medium ${isSelected ? "text-blue-700 dark:text-blue-300 font-semibold rounded-xl bg-blue-50/80 dark:bg-blue-950/60" : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-xl"}`
+                            }`}
+                          >
+                            <div className={`flex items-center ${isMobile ? 'gap-3' : 'gap-2'} min-w-0`}>
+                              {!isMobile && (
+                                <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 transition-colors ${
+                                  isSelected ? "bg-blue-600 dark:bg-blue-500 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                                }`}>
+                                  <Building className="w-3 h-3" />
+                                </div>
+                              )}
+                              {isMobile && <Building className="w-4 h-4 shrink-0" />}
+                              <span className="truncate">{name}</span>
+                            </div>
+                            {isSelected && <Check className={`shrink-0 ${isMobile ? 'w-4 h-4 text-blue-400' : 'w-3.5 h-3.5 text-blue-600 dark:text-blue-400'}`} />}
+                          </button>
+                        );
+                      })
+                    )}
+                    {isMobile && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsOpen(false);
+                          setIsExpanded(false);
+                          router.push("/");
+                        }}
+                        className="w-full flex items-center gap-3 py-2 pl-5 pr-8 text-sm font-medium text-slate-500 hover:text-white transition-colors duration-150 ease-in-out text-left focus:outline-none mt-1"
+                      >
+                        <LayoutDashboard className="w-4 h-4 shrink-0" />
+                        <span className="truncate">View all workspaces</span>
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
               )}
-            </div>
+            </AnimatePresence>
 
-            {/* Super Admin Actions (Only renders if isSuperAdmin is true) */}
-            {isSuperAdmin && (
-              <div className="border-t border-slate-100 pt-1 mt-1 space-y-0.5">
+            {/* Super Admin Actions (Only renders if isSuperAdmin is true and not mobile) */}
+            {!isMobile && isSuperAdmin && (
+              <div className="border-t border-slate-100 dark:border-slate-800 pt-1 mt-1 space-y-0.5">
                 <button
                   type="button"
                   onClick={() => {
                     setIsOpen(false);
                     setIsManageTeamModalOpen(true);
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors duration-150 ease-[cubic-bezier(0.4,0,0.2,1)] text-left focus:outline-none focus-visible:bg-slate-100"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors duration-150 ease-in-out text-left focus:outline-none focus-visible:bg-slate-100 dark:focus-visible:bg-slate-800"
                 >
-                  <Users className="w-3.5 h-3.5 text-slate-400" />
+                  <Users className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                   <span>Manage Team</span>
                 </button>
 
@@ -131,10 +180,26 @@ export default function AccountSwitcher() {
                     setIsOpen(false);
                     setIsManagerModalOpen(true);
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50/80 transition-colors duration-150 ease-[cubic-bezier(0.4,0,0.2,1)] text-left focus:outline-none focus-visible:bg-blue-100/60"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50/80 dark:hover:bg-blue-950/60 transition-colors duration-150 ease-in-out text-left focus:outline-none focus-visible:bg-blue-100/60 dark:focus-visible:bg-blue-950/80"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Create Workspace</span>
+                </button>
+              </div>
+            )}
+            {/* Global Escape Hatch (Always visible on desktop) */}
+            {!isMobile && (
+              <div className="border-t border-slate-100 dark:border-slate-800 pt-1 mt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                    router.push("/");
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors duration-150 ease-in-out text-left focus:outline-none focus-visible:bg-slate-100 dark:focus-visible:bg-slate-800"
+                >
+                  <LayoutDashboard className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                  <span>View all workspaces</span>
                 </button>
               </div>
             )}
