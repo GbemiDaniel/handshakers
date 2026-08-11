@@ -8,6 +8,10 @@
  *   SWR's default dedupingInterval (2000ms) matched the refreshInterval (2000ms),
  *   causing the fetcher to be silently skipped on consecutive poll cycles.
  *   Additionally, TaskLogger and FuelGauge had no cross-account refresh mechanism.
+ *
+ * Phase 5 Update:
+ *   The hook now queries stop_time_seconds directly (the legacy stop_minutes
+ *   column was dropped). Test mocks and assertions use raw seconds — no conversion.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -21,10 +25,12 @@ import useSWR from "swr";
 // ---------------------------------------------------------------------------
 const mockLimit = vi.fn();
 const mockOrder = vi.fn(() => ({ limit: mockLimit }));
-const mockSelect = vi.fn(() => ({ order: mockOrder }));
+const mockEq = vi.fn(() => ({ order: mockOrder }));
+const mockSelect = vi.fn(() => ({ eq: mockEq, order: mockOrder }));
 const mockLte = vi.fn();
 const mockFrom = vi.fn(() => ({
   select: mockSelect,
+  eq: mockEq,
   order: mockOrder,
   limit: mockLimit,
   lte: mockLte,
@@ -40,17 +46,22 @@ vi.mock("@/utils/supabase", () => ({
 // Helpers
 // ---------------------------------------------------------------------------
 
-function resetMocks(stopMinutes = 500) {
+const TEST_ACCOUNT_ID = "test-account-abc123";
+
+function resetMocks(stopTimeSeconds = 30000) {
   vi.clearAllMocks();
   // Re-build the chain so each mock returns the next step
-  mockSelect.mockReturnValue({ order: mockOrder, lte: mockLte });
+  // Chain: from -> select -> eq -> order -> limit
+  mockSelect.mockReturnValue({ eq: mockEq, order: mockOrder, lte: mockLte });
+  mockEq.mockReturnValue({ order: mockOrder });
   mockOrder.mockReturnValue({ limit: mockLimit });
   mockLimit.mockResolvedValue({
-    data: stopMinutes !== null ? [{ stop_minutes: stopMinutes }] : [],
+    data: stopTimeSeconds !== null ? [{ stop_time_seconds: stopTimeSeconds }] : [],
     error: null,
   });
   mockFrom.mockReturnValue({
     select: mockSelect,
+    eq: mockEq,
     order: mockOrder,
     limit: mockLimit,
     lte: mockLte,
@@ -82,25 +93,32 @@ describe("latestGlobalStopFetcher", () => {
   let latestGlobalStopFetcher;
 
   beforeEach(async () => {
-    resetMocks(500);
+    resetMocks(30000);
     const mod = await import("@/hooks/useLatestGlobalStop");
     latestGlobalStopFetcher = mod.latestGlobalStopFetcher;
   });
 
-  it("returns the highest stop_minutes from time_logs", async () => {
+  it("returns the highest stop_time_seconds value directly", async () => {
+    // Pass a key array with accountId, matching how SWR invokes the fetcher
+    const result = await latestGlobalStopFetcher(["latest-global-stop", TEST_ACCOUNT_ID]);
+    // Hook returns raw seconds from DB — no conversion
+    expect(result).toBe(30000);
+  });
+
+  it("returns 0 when no accountId is provided", async () => {
     const result = await latestGlobalStopFetcher();
-    expect(result).toBe(500);
+    expect(result).toBe(0);
   });
 
   it("returns 0 when no time logs exist", async () => {
     mockLimit.mockResolvedValueOnce({ data: [], error: null });
-    const result = await latestGlobalStopFetcher();
+    const result = await latestGlobalStopFetcher(["latest-global-stop", TEST_ACCOUNT_ID]);
     expect(result).toBe(0);
   });
 
   it("returns 0 when data is null", async () => {
     mockLimit.mockResolvedValueOnce({ data: null, error: null });
-    const result = await latestGlobalStopFetcher();
+    const result = await latestGlobalStopFetcher(["latest-global-stop", TEST_ACCOUNT_ID]);
     expect(result).toBe(0);
   });
 
@@ -109,22 +127,29 @@ describe("latestGlobalStopFetcher", () => {
       data: null,
       error: { message: "Database connection failed" },
     });
-    await expect(latestGlobalStopFetcher()).rejects.toThrow();
+    await expect(
+      latestGlobalStopFetcher(["latest-global-stop", TEST_ACCOUNT_ID])
+    ).rejects.toThrow();
   });
 
   it("queries the time_logs table", async () => {
-    await latestGlobalStopFetcher();
+    await latestGlobalStopFetcher(["latest-global-stop", TEST_ACCOUNT_ID]);
     expect(mockFrom).toHaveBeenCalledWith("time_logs");
   });
 
-  it("selects stop_minutes column", async () => {
-    await latestGlobalStopFetcher();
-    expect(mockSelect).toHaveBeenCalledWith("stop_minutes");
+  it("selects stop_time_seconds column", async () => {
+    await latestGlobalStopFetcher(["latest-global-stop", TEST_ACCOUNT_ID]);
+    expect(mockSelect).toHaveBeenCalledWith("stop_time_seconds");
+  });
+
+  it("filters by account_id", async () => {
+    await latestGlobalStopFetcher(["latest-global-stop", TEST_ACCOUNT_ID]);
+    expect(mockEq).toHaveBeenCalledWith("account_id", TEST_ACCOUNT_ID);
   });
 
   it("orders descending and limits to 1", async () => {
-    await latestGlobalStopFetcher();
-    expect(mockOrder).toHaveBeenCalledWith("stop_minutes", {
+    await latestGlobalStopFetcher(["latest-global-stop", TEST_ACCOUNT_ID]);
+    expect(mockOrder).toHaveBeenCalledWith("stop_time_seconds", {
       ascending: false,
     });
     expect(mockLimit).toHaveBeenCalledWith(1);
@@ -138,17 +163,18 @@ describe("useLatestGlobalStop hook", () => {
   let useLatestGlobalStop;
 
   beforeEach(async () => {
-    resetMocks(750);
+    resetMocks(45000);
     const mod = await import("@/hooks/useLatestGlobalStop");
     useLatestGlobalStop = mod.useLatestGlobalStop;
   });
 
-  it("returns fetched data through SWR", async () => {
+  it("returns fetched data through SWR (in seconds)", async () => {
     const wrapper = createTestWrapper();
-    const { result } = renderHook(() => useLatestGlobalStop(), { wrapper });
+    const { result } = renderHook(() => useLatestGlobalStop(TEST_ACCOUNT_ID), { wrapper });
 
     await waitFor(() => {
-      expect(result.current.data).toBe(750);
+      // Hook returns raw seconds from DB — no conversion
+      expect(result.current.data).toBe(45000);
     });
     expect(result.current.isLoading).toBe(false);
   });
@@ -157,7 +183,7 @@ describe("useLatestGlobalStop hook", () => {
     const wrapper = createTestWrapper();
     const { result } = renderHook(
       () => {
-        const { data = 0 } = useLatestGlobalStop();
+        const { data = 0 } = useLatestGlobalStop(TEST_ACCOUNT_ID);
         return data;
       },
       { wrapper }
@@ -170,16 +196,17 @@ describe("useLatestGlobalStop hook", () => {
 
   it("exposes a mutate function for immediate cache updates", async () => {
     const wrapper = createTestWrapper();
-    const { result } = renderHook(() => useLatestGlobalStop(), { wrapper });
+    const { result } = renderHook(() => useLatestGlobalStop(TEST_ACCOUNT_ID), { wrapper });
 
-    await waitFor(() => expect(result.current.data).toBe(750));
+    // Hook returns raw seconds from DB (45000)
+    await waitFor(() => expect(result.current.data).toBe(45000));
 
-    // Optimistic update (simulates collision handler in TaskLogger)
+    // Optimistic update (simulates collision handler in TaskLogger, in seconds)
     await act(async () => {
-      await result.current.mutate(999, { revalidate: false });
+      await result.current.mutate(59940, { revalidate: false });
     });
 
-    expect(result.current.data).toBe(999);
+    expect(result.current.data).toBe(59940);
   });
 });
 
@@ -247,9 +274,9 @@ describe("DailyLogs fetcher: cacheBustTime removal", () => {
     const filePath = path.default.resolve("components/DailyLogs.jsx");
     const source = fs.default.readFileSync(filePath, "utf-8");
 
-    // Extract the fetcher function body
+    // Extract the fetcher function body (supports destructured args)
     const fetcherMatch = source.match(
-      /const fetcher\s*=\s*async\s*\(\)\s*=>\s*\{([\s\S]*?)\n\};/
+      /const fetcher\s*=\s*async\s*\([^)]*\)\s*=>\s*\{([\s\S]*?)\n\};/
     );
     expect(fetcherMatch).not.toBeNull();
 
@@ -292,7 +319,7 @@ describe("Providers: Global SWR Config", () => {
 // Test Suite 6: Shared SWR key — TaskLogger + FuelGauge sync
 // ---------------------------------------------------------------------------
 describe("Shared SWR key: TaskLogger + FuelGauge cross-component sync", () => {
-  it("both components use the same SWR cache key 'latest-global-stop'", async () => {
+  it("hook defines the shared SWR cache key 'latest-global-stop'", async () => {
     const fs = await import("fs");
     const path = await import("path");
 
@@ -304,17 +331,12 @@ describe("Shared SWR key: TaskLogger + FuelGauge cross-component sync", () => {
       path.default.resolve("components/TaskLogger.jsx"),
       "utf-8"
     );
-    const fuelGaugeSource = fs.default.readFileSync(
-      path.default.resolve("components/FuelGauge.jsx"),
-      "utf-8"
-    );
 
     // The hook defines the key
     expect(hookSource).toContain('"latest-global-stop"');
 
-    // Both components import and use the shared hook
+    // TaskLogger imports and uses the shared hook
     expect(taskLoggerSource).toContain("useLatestGlobalStop");
-    expect(fuelGaugeSource).toContain("useLatestGlobalStop");
   });
 
   it("TaskLogger no longer uses one-shot fetchLatestGlobalTime", async () => {

@@ -3,38 +3,21 @@
 import React, { useState, useEffect } from "react";
 import { usePayoutCalculator } from "@/hooks/usePayoutCalculator";
 import { Gauge, Sparkles, RefreshCw } from "lucide-react";
-
-/**
- * Converts raw minutes to "Xh Ym" string format.
- * (e.g. 2730 -> "45h 30m", 4800 -> "80h 00m")
- */
-function minutesToHHMMDisplay(totalMinutes) {
-  if (totalMinutes === null || totalMinutes === undefined || isNaN(totalMinutes) || totalMinutes <= 0) return "0h 00m";
-  const rounded = Math.round(totalMinutes);
-  let hours = Math.floor(rounded / 60);
-  let minutes = rounded % 60;
-
-  if (minutes === 60) {
-    hours += 1;
-    minutes = 0;
-  }
-
-  const formattedMinutes = minutes < 10 ? `0${minutes}` : `${minutes}`;
-  return `${hours}h ${formattedMinutes}m`;
-}
+import { secondsToSmartDisplay } from "@/utils/timeUtils";
 
 export default function FuelGauge() {
   const [animatedPercent, setAnimatedPercent] = useState(0);
 
-  const MAX_POOL_MINUTES = 4800; // 80 hours strictly
+  const MAX_POOL_SECONDS = 288000; // 80 hours strictly (80 * 3600)
 
   const { state, actions } = usePayoutCalculator({});
-  const { currentCycleTotalMinutes = 0, isLoading: fetching } = state;
+  // Aliased because the API surface kept the original key name to prevent breakage
+  const { currentCycleTotalSeconds: currentPoolSeconds = 0, isLoading: fetching } = state;
   const { mutate: refreshPool } = actions;
 
   // Trigger smooth transition animation on mount or data fetch
   useEffect(() => {
-    const rawPercent = (currentCycleTotalMinutes / MAX_POOL_MINUTES) * 100;
+    const rawPercent = (currentPoolSeconds / MAX_POOL_SECONDS) * 100;
     const cappedPercent = Math.min(Math.max(rawPercent, 0), 100);
 
     const timer = setTimeout(() => {
@@ -42,24 +25,27 @@ export default function FuelGauge() {
     }, 50);
 
     return () => clearTimeout(timer);
-  }, [currentCycleTotalMinutes]);
+  }, [currentPoolSeconds]);
 
   // Dynamic Color Logic
   let fillColorClass = "bg-blue-600 dark:bg-blue-500";
   let badgeColorClass = "bg-blue-50 dark:bg-blue-950/60 border-blue-100 dark:border-blue-800/60 text-blue-600 dark:text-blue-400";
   let glowBorderClass = "border-slate-200/80 dark:border-slate-800";
 
-  if (currentCycleTotalMinutes >= 4800) {
+  // 4800 minutes is 288000 seconds (100% capacity)
+  if (currentPoolSeconds >= 288000) {
     fillColorClass = "bg-red-500";
     badgeColorClass = "bg-red-50 dark:bg-red-950/60 border-red-200 dark:border-red-800/60 text-red-700 dark:text-red-400";
     glowBorderClass = "border-red-300 dark:border-red-800/80 ring-2 ring-red-100 dark:ring-red-950/50";
-  } else if (currentCycleTotalMinutes >= 4320) {
+  } 
+  // 4320 minutes is 259200 seconds (90% capacity threshold)
+  else if (currentPoolSeconds >= 259200) {
     fillColorClass = "bg-amber-500";
     badgeColorClass = "bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800/60 text-amber-700 dark:text-amber-400";
     glowBorderClass = "border-amber-300 dark:border-amber-800/80 ring-2 ring-amber-100 dark:ring-amber-950/50";
   }
 
-  const rawPercent = ((currentCycleTotalMinutes / MAX_POOL_MINUTES) * 100).toFixed(1);
+  const rawPercent = ((currentPoolSeconds / MAX_POOL_SECONDS) * 100).toFixed(1);
 
   return (
     <div className={`@container w-full bg-white dark:bg-slate-900 border ${glowBorderClass} rounded-2xl p-4 sm:p-5 shadow-xs space-y-3 transition-all duration-200 ease-in-out`}>
@@ -87,7 +73,7 @@ export default function FuelGauge() {
             {rawPercent}%
           </span>
           <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 font-mono tabular-nums">
-            {minutesToHHMMDisplay(currentCycleTotalMinutes)} / 80h 00m Used
+            {secondsToSmartDisplay(currentPoolSeconds)} / 80:00 Used
           </span>
         </div>
       </div>

@@ -2,7 +2,10 @@ import useSWR from "swr";
 import { supabase } from "@/utils/supabase";
 
 /**
- * Fetches the highest stop_minutes value across all time_logs for a specific account.
+ * Fetches the highest stop_time_seconds value across all time_logs for a specific account.
+ * Returns the raw integer seconds directly — no conversion needed post-Phase 5.
+ *
+ * @returns {number} The latest global stop time in total seconds from midnight.
  */
 export const latestGlobalStopFetcher = async (keyArg = []) => {
   const accountId = Array.isArray(keyArg) ? keyArg[1] : keyArg;
@@ -10,16 +13,19 @@ export const latestGlobalStopFetcher = async (keyArg = []) => {
 
   const { data, error } = await supabase
     .from("time_logs")
-    .select("stop_minutes")
+    .select("stop_time_seconds")
     .eq("account_id", accountId)
-    .order("stop_minutes", { ascending: false })
+    .order("stop_time_seconds", { ascending: false })
     .limit(1);
 
   if (error) throw error;
 
-  return data && data.length > 0 && data[0].stop_minutes !== undefined
-    ? data[0].stop_minutes
-    : 0;
+  const latestSeconds =
+    data && data.length > 0 && data[0].stop_time_seconds !== undefined
+      ? data[0].stop_time_seconds
+      : 0;
+
+  return latestSeconds;
 };
 
 export function useLatestGlobalStop(accountId) {

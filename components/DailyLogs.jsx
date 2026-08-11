@@ -5,6 +5,7 @@ import useSWR from "swr";
 import { supabase } from "@/utils/supabase";
 import { useAccount } from "@/context/AccountContext";
 import { Calendar, RefreshCw, ChevronRight, ChevronDown, Clock, User } from "lucide-react";
+import { secondsToSmartDisplay, secondsToHHMMSSString } from "@/utils/timeUtils";
 
 /**
  * Formats ISO timestamp into a full Anchor Date string:
@@ -32,36 +33,6 @@ function formatAnchorDate(isoString) {
 }
 
 /**
- * Converts raw minutes to HH:MM clock string (e.g. 1215 -> "20:15").
- */
-function minutesToClockString(rawMinutes) {
-  if (rawMinutes === null || rawMinutes === undefined || isNaN(rawMinutes)) return "00:00";
-  const hours = Math.floor(rawMinutes / 60);
-  const mins = rawMinutes % 60;
-  const formattedHours = hours < 10 ? `0${hours}` : `${hours}`;
-  const formattedMins = mins < 10 ? `0${mins}` : `${mins}`;
-  return `${formattedHours}:${formattedMins}`;
-}
-
-/**
- * Converts duration minutes to standard "Xh Ym" format (e.g. 100 -> "1h 40m").
- */
-function minutesToHHMMDisplay(totalMinutes) {
-  if (totalMinutes === null || totalMinutes === undefined || isNaN(totalMinutes) || totalMinutes <= 0) return "0h 00m";
-  const rounded = Math.round(totalMinutes);
-  let hours = Math.floor(rounded / 60);
-  let minutes = rounded % 60;
-
-  if (minutes === 60) {
-    hours += 1;
-    minutes = 0;
-  }
-
-  const formattedMinutes = minutes < 10 ? `0${minutes}` : `${minutes}`;
-  return `${hours}h ${formattedMinutes}m`;
-}
-
-/**
  * Sequential Chunking Algorithm:
  * Groups a flat, chronologically sorted array of logs into shift chunks.
  * Splitting is ONLY triggered by the is_end_of_day flag — never by calendar dates.
@@ -72,7 +43,7 @@ function groupLogsIntoShifts(logs, profilesMap, currentUserId) {
 
   for (let i = 0; i < logs.length; i++) {
     const log = logs[i];
-    const duration = (log.stop_minutes || 0) - (log.start_minutes || 0);
+    const duration = (log.stop_time_seconds || 0) - (log.start_time_seconds || 0);
     if (duration <= 0) continue;
 
     // Initialize a new shift if currentShift is null
@@ -81,7 +52,7 @@ function groupLogsIntoShifts(logs, profilesMap, currentUserId) {
         shiftId: log.id,
         anchorIso: log.created_at,
         shiftDateTitle: formatAnchorDate(log.created_at),
-        dailyTotalMinutes: 0,
+        dailyTotalSeconds: 0,
         sessions: [],
       };
     }
@@ -90,19 +61,19 @@ function groupLogsIntoShifts(logs, profilesMap, currentUserId) {
     const userName = profilesMap[log.user_id] || `User (${log.user_id?.slice(0, 6)})`;
     const isCurrentUser = log.user_id === currentUserId;
 
-    currentShift.dailyTotalMinutes += duration;
+    currentShift.dailyTotalSeconds += duration;
     currentShift.sessions.push({
       id: log.id,
       userId: log.user_id,
       userName,
       isCurrentUser,
-      startMinutes: log.start_minutes,
-      stopMinutes: log.stop_minutes,
+      startSeconds: log.start_time_seconds,
+      stopSeconds: log.stop_time_seconds,
       isEndOfDay: !!log.is_end_of_day,
-      durationMinutes: duration,
-      startClock: minutesToClockString(log.start_minutes),
-      stopClock: minutesToClockString(log.stop_minutes),
-      durationHHMM: minutesToHHMMDisplay(duration),
+      durationSeconds: duration,
+      startClock: secondsToHHMMSSString(log.start_time_seconds),
+      stopClock: secondsToHHMMSSString(log.stop_time_seconds),
+      durationHHMM: secondsToSmartDisplay(duration),
       createdAt: log.created_at,
     });
 
@@ -143,7 +114,7 @@ const fetcher = async ([_key, accountId]) => {
   // 2. Fetch ALL team logs for this account
   const { data: logs, error: logsErr } = await supabase
     .from("time_logs")
-    .select("id, user_id, start_minutes, stop_minutes, is_end_of_day, created_at")
+    .select("id, user_id, start_time_seconds, stop_time_seconds, is_end_of_day, created_at")
     .eq("account_id", accountId)
     .order("created_at", { ascending: true });
 
@@ -263,7 +234,7 @@ export default function DailyLogs({ session, refreshKey }) {
                   </div>
 
                   <div className="font-semibold text-slate-900 dark:text-slate-100 font-mono text-xs tabular-nums shrink-0 pl-2">
-                    {minutesToHHMMDisplay(shift.dailyTotalMinutes)}
+                    {secondsToSmartDisplay(shift.dailyTotalSeconds)}
                   </div>
                 </button>
 
@@ -300,7 +271,7 @@ export default function DailyLogs({ session, refreshKey }) {
                           )}
                         </div>
                         <div className="text-slate-500 dark:text-slate-400 font-medium text-[11px] font-mono tabular-nums shrink-0 pl-5.5 sm:pl-0">
-                          {sess.durationHHMM} ({sess.durationMinutes} mins)
+                          {sess.durationHHMM} ({sess.durationSeconds} secs)
                         </div>
                       </div>
                     ))}

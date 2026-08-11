@@ -3,74 +3,57 @@ import useSWR from "swr";
 import { toast } from "sonner";
 import { supabase } from "@/utils/supabase";
 import { useAccount } from "@/context/AccountContext";
+import { timeToTotalSeconds, secondsToHHMMString, secondsToHHMMSSString } from "@/utils/timeUtils";
 
 export const preciseRound = (num) => {
   return (Math.round((num + Number.EPSILON) * 1000) / 1000).toFixed(3);
 };
 
-export const formatHHMMSS = (totalMins) => {
-  const h = Math.floor(totalMins / 60);
-  const m = Math.floor(totalMins % 60);
-  return `${h}:${m.toString().padStart(2, '0')}:00`;
+export const formatHHMMSS = (totalSecs) => {
+  return secondsToHHMMSSString(totalSecs);
 };
 
 /**
- * Converts raw total minutes into an HH:MM string for input display.
- * (e.g. 980 -> "16:20", 0 -> "00:00")
+ * Converts raw total seconds into an HH:MM string for input display.
+ * Retains the name for backward API compatibility but operates on seconds.
  */
-export function minutesToHHMMString(totalMinutes) {
-  if (totalMinutes === null || totalMinutes === undefined || isNaN(totalMinutes) || totalMinutes <= 0) return "00:00";
-  const rounded = Math.round(totalMinutes);
-  let hours = Math.floor(rounded / 60);
-  let minutes = rounded % 60;
-
-  if (minutes === 60) {
-    hours += 1;
-    minutes = 0;
-  }
-
-  const formattedHours = hours < 10 ? `0${hours}` : `${hours}`;
-  const formattedMinutes = minutes < 10 ? `0${minutes}` : `${minutes}`;
-  return `${formattedHours}:${formattedMinutes}`;
+export function minutesToHHMMString(totalSeconds) {
+  return secondsToHHMMString(totalSeconds);
 }
 
 /**
- * Converts raw total minutes into a clean "Xh Ym" string for breakdown display.
- * (e.g. 980 -> "16h 20m")
+ * Converts raw total seconds into a clean "Xh Ym Zs" string for breakdown display.
+ * Retains the name for backward API compatibility but operates on seconds.
  */
-export function minutesToHHMMDisplay(totalMinutes) {
-  if (totalMinutes === null || totalMinutes === undefined || isNaN(totalMinutes) || totalMinutes <= 0) return "0h 00m";
-  const rounded = Math.round(totalMinutes);
-  let hours = Math.floor(rounded / 60);
-  let minutes = rounded % 60;
-
-  if (minutes === 60) {
-    hours += 1;
-    minutes = 0;
-  }
+export function minutesToHHMMDisplay(totalSeconds) {
+  if (totalSeconds === null || totalSeconds === undefined || isNaN(totalSeconds) || totalSeconds <= 0) return "0h 00m";
+  
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = Math.floor(totalSeconds % 60);
 
   const formattedMinutes = minutes < 10 ? `0${minutes}` : `${minutes}`;
+  
+  if (seconds > 0) {
+    const formattedSeconds = seconds < 10 ? `0${seconds}` : `${seconds}`;
+    return `${hours}h ${formattedMinutes}m ${formattedSeconds}s`;
+  }
+  
   return `${hours}h ${formattedMinutes}m`;
 }
 
 /**
- * Converts an HH:MM string into raw Total Minutes.
- * (e.g. "40:00" -> 2400)
+ * Converts an HH:MM string into raw Total Seconds.
+ * Retains the name for backward API compatibility.
  */
 export function timeToTotalMinutes(timeStr) {
   if (!timeStr || typeof timeStr !== "string") return null;
-  const trimmed = timeStr.trim();
-  const match = /^(\d+):([0-5]?\d)$/.exec(trimmed);
-  if (match) {
-    const hours = parseInt(match[1], 10);
-    const minutes = parseInt(match[2], 10);
-    return hours * 60 + minutes;
-  }
-  return null;
+  const secs = timeToTotalSeconds(timeStr);
+  return secs === 0 && timeStr.trim() !== "00:00" ? null : secs;
 }
 
 export const fetchTeamData = async (accountId) => {
-  let logsQuery = supabase.from("time_logs").select("id, user_id, start_minutes, stop_minutes, created_at, is_end_of_day");
+  let logsQuery = supabase.from("time_logs").select("id, user_id, start_time_seconds, stop_time_seconds, created_at, is_end_of_day");
   let membersQuery = supabase.from("account_members").select("user_id, status");
   
   if (accountId) {
@@ -195,8 +178,8 @@ export function usePayoutCalculator({ session }) {
     const profiles = data?.profiles;
     const members = data?.members;
 
-    const { teamLogs, currentCycleTotalMinutes, remainingMinutes } = useMemo(() => {
-      if (!logs) return { teamLogs: [], currentCycleTotalMinutes: 0, remainingMinutes: 4800 };
+    const { teamLogs, currentCycleTotalSeconds, remainingMinutes } = useMemo(() => {
+      if (!logs) return { teamLogs: [], currentCycleTotalSeconds: 0, remainingMinutes: 288000 };
 
       const sortedLogs = [...logs].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
       
@@ -222,7 +205,7 @@ export function usePayoutCalculator({ session }) {
               triggerNewCycle = true;
             } 
             // Condition C (The Zero-Drop Failsafe)
-            else if (previousLog && log.start_minutes < previousLog.stop_minutes) {
+            else if (previousLog && log.start_time_seconds < previousLog.stop_time_seconds) {
               triggerNewCycle = true;
             }
           }
@@ -243,7 +226,7 @@ export function usePayoutCalculator({ session }) {
 
       let currentTotal = 0;
       currentCycleLogs.forEach((log) => {
-        const duration = (log.stop_minutes || 0) - (log.start_minutes || 0);
+        const duration = (log.stop_time_seconds || 0) - (log.start_time_seconds || 0);
         if (duration > 0) {
           currentTotal += duration;
         }
@@ -259,8 +242,8 @@ export function usePayoutCalculator({ session }) {
       
       return {
         teamLogs: returnedLogs,
-        currentCycleTotalMinutes: currentTotal,
-        remainingMinutes: 4800 - currentTotal
+        currentCycleTotalSeconds: currentTotal,
+        remainingMinutes: 288000 - currentTotal
       };
     }, [logs, payCycle, pacificMidnightUTC, pacificNoonUTC]);
 
@@ -287,7 +270,7 @@ export function usePayoutCalculator({ session }) {
     const totals = {};
     let totalMins = 0;
     teamLogs.forEach((log) => {
-      const duration = (log.stop_minutes || 0) - (log.start_minutes || 0);
+      const duration = (log.stop_time_seconds || 0) - (log.start_time_seconds || 0);
       if (duration > 0) {
         totals[log.user_id] = (totals[log.user_id] || 0) + duration;
         totalMins += duration;
@@ -309,7 +292,7 @@ export function usePayoutCalculator({ session }) {
 
     const platformMinutes = timeToTotalMinutes(platformTimeInput);
 
-    if (platformMinutes === null) {
+    if (platformMinutes === null || platformMinutes === 0) {
       toast.error('Please enter a valid "Platform Paid Time" in HH:MM format (e.g. 40:00).');
       return;
     }
@@ -324,7 +307,7 @@ export function usePayoutCalculator({ session }) {
     // Group logs by user to calculate individual time shares & prorated payout
     const userMinutesMap = {};
     teamLogs.forEach((log) => {
-      const duration = (log.stop_minutes || 0) - (log.start_minutes || 0);
+      const duration = (log.stop_time_seconds || 0) - (log.start_time_seconds || 0);
       if (duration > 0) {
         userMinutesMap[log.user_id] = (userMinutesMap[log.user_id] || 0) + duration;
       }
@@ -336,10 +319,10 @@ export function usePayoutCalculator({ session }) {
       const shareDecimal = userMinutes / teamTotalMinutes;
       const sharePercentage = preciseRound(shareDecimal * 100);
 
-      // High-precision prorate formula: (User Minutes / Team Total Minutes) * Platform Paid Minutes
+      // High-precision prorate formula: (User Seconds / Team Total Seconds) * Platform Paid Seconds
       const payoutMinutes = shareDecimal * platformMinutes;
-      const payoutDecimalHours = preciseRound(payoutMinutes / 60);
-      const userDecimalHours = preciseRound(userMinutes / 60);
+      const payoutDecimalHours = preciseRound(payoutMinutes / 3600);
+      const userDecimalHours = preciseRound(userMinutes / 3600);
 
       return {
         userId,
@@ -356,11 +339,11 @@ export function usePayoutCalculator({ session }) {
       };
     });
 
-    // Sort team members by highest logged minutes
+    // Sort team members by highest logged time
     breakdown.sort((a, b) => b.userMinutes - a.userMinutes);
 
-    const platformDecimalHours = preciseRound(platformMinutes / 60);
-    const teamDecimalHours = preciseRound(teamTotalMinutes / 60);
+    const platformDecimalHours = preciseRound(platformMinutes / 3600);
+    const teamDecimalHours = preciseRound(teamTotalMinutes / 3600);
 
     setCalculationResult({
       platformMinutes,
@@ -388,7 +371,7 @@ export function usePayoutCalculator({ session }) {
       payCycle,
       dateLabels,
       hasPreviousData,
-      currentCycleTotalMinutes,
+      currentCycleTotalSeconds,
       remainingMinutes,
     },
     setters: {

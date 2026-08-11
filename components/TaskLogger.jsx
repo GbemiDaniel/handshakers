@@ -6,36 +6,9 @@ import { supabase } from "@/utils/supabase";
 import { useLatestGlobalStop } from "@/hooks/useLatestGlobalStop";
 import { toast } from "sonner";
 import { useAccount } from "@/context/AccountContext";
+import { timeToTotalSeconds, secondsToHHMMString, secondsToSmartDisplay } from "@/utils/timeUtils";
 import { Clock, Lock, ArrowRight, AlertCircle, CheckCircle2, Loader2, Sparkles, Undo2, AlertTriangle } from "lucide-react";
-
-/**
- * Converts raw total minutes into an HH:MM string for display.
- * (e.g. 1245 -> "20:45", 0 -> "00:00")
- */
-function minutesToHHMMString(totalMinutes) {
-  if (totalMinutes === null || totalMinutes === undefined || isNaN(totalMinutes)) return "00:00";
-  const hours = Math.floor(totalMinutes / 60);
-  const mins = totalMinutes % 60;
-  const formattedHours = hours < 10 ? `0${hours}` : `${hours}`;
-  const formattedMins = mins < 10 ? `0${mins}` : `${mins}`;
-  return `${formattedHours}:${formattedMins}`;
-}
-
-/**
- * Converts an HH:MM string into raw Total Minutes.
- * (e.g. "20:45" -> 1245)
- */
-function timeToTotalMinutes(timeStr) {
-  if (!timeStr || typeof timeStr !== "string") return null;
-  const trimmed = timeStr.trim();
-  const match = /^(\d+):([0-5]\d)$/.exec(trimmed);
-  if (match) {
-    const hours = parseInt(match[1], 10);
-    const minutes = parseInt(match[2], 10);
-    return hours * 60 + minutes;
-  }
-  return null;
-}
+import { AnimatePresence, motion } from "framer-motion";
 
 export default function TaskLogger({ session, onUpdate }) {
   const [activeTypists, setActiveTypists] = useState([]);
@@ -45,22 +18,120 @@ export default function TaskLogger({ session, onUpdate }) {
   const { activeAccount } = useAccount();
 
   const [showRollbackModal, setShowRollbackModal] = useState(false);
+  const [isAggregatorOpen, setIsAggregatorOpen] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [rollingBack, setRollingBack] = useState(false);
 
   const [fieldError, setFieldError] = useState("");
 
-  // Maximum cumulative pool cap: 80 hours = 4800 minutes
-  const MAX_POOL_MINUTES = 4800;
+  // Maximum cumulative pool cap: 80 hours = 288000 seconds
+  const MAX_POOL_SECONDS = 288000;
 
-  // Shared SWR hook: auto-polls the latest global stop_minutes every 2s.
+  // Shared SWR hook: auto-polls the latest global stop time (in seconds) every 2s.
   // Shared cache key with FuelGauge — mutating here updates both components.
   const {
-    data: lockedStartMinutes = 0,
+    data: lockedStartSeconds = 0,
     mutate: refreshLatestStop,
     isLoading: fetchingLatest,
   } = useLatestGlobalStop(activeAccount?.id);
+
+  // Aggregator State & Math Engine
+  const [tasks, setTasks] = useState([]);
+  const [taskInput, setTaskInput] = useState('');
+  const [isLoaded, setIsLoaded] = useState(false);
+  
+  useEffect(() => {
+    if (isAggregatorOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isAggregatorOpen]);
+
+  // Load from local storage on mount (Client-side safe)
+  useEffect(() => {
+    const cachedTasks = localStorage.getItem('handshakers_aggregator_tasks');
+    if (cachedTasks) {
+      try {
+        setTasks(JSON.parse(cachedTasks));
+      } catch (err) {
+        console.error("Error parsing cached tasks", err);
+      }
+    }
+    setIsLoaded(true); // Mark as loaded AFTER retrieval
+  }, []);
+
+  // Save to local storage on tasks change
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('handshakers_aggregator_tasks', JSON.stringify(tasks));
+    }
+  }, [tasks, isLoaded]);
+
+  const closeAggregatorModal = () => {
+    setIsAggregatorOpen(false);
+  };
+  
+  const parseToSeconds = (inputStr) => {
+    if (!inputStr || typeof inputStr !== 'string') return 0;
+    const trimmed = inputStr.trim();
+    if (trimmed.includes(':')) {
+      const [mins, secs] = trimmed.split(':');
+      const parsedMins = parseInt(mins, 10);
+      const parsedSecs = parseInt(secs, 10);
+      if (isNaN(parsedMins) || isNaN(parsedSecs)) return 0;
+      return (parsedMins * 60) + parsedSecs;
+    } else {
+      const parsed = parseInt(trimmed, 10);
+      return isNaN(parsed) ? 0 : parsed * 60;
+    }
+  };
+  
+  // Zero Truncation: exact integer seconds accumulation — no rounding in the loop
+  const totalSeconds = tasks.reduce((sum, task) => sum + task.seconds, 0);
+  const displayHours = Math.floor(totalSeconds / 3600);
+  const displayMins = Math.floor((totalSeconds % 3600) / 60);
+  const displaySecs = totalSeconds % 60;
+
+  /**
+   * Calculates the projected stop time by adding exact accumulated task seconds
+   * to the locked start seconds. Operates entirely in seconds — zero truncation.
+   *
+   * @param {number} startSeconds — Locked start time in total seconds.
+   * @param {number} addedSeconds — Exact accumulated task seconds.
+   * @returns {string} HH:MM or HH:MM:SS display string.
+   */
+  const calculateProjectedStop = (startSeconds, addedSeconds) => {
+    const projectedStopSeconds = startSeconds + addedSeconds;
+
+    // Handle 24-hour rollover (86400 seconds per day)
+    const wrappedSeconds = ((projectedStopSeconds % 86400) + 86400) % 86400;
+
+    return secondsToSmartDisplay(wrappedSeconds);
+  };
+
+  const projectedStopTime = calculateProjectedStop(lockedStartSeconds, totalSeconds);
+
+  const handleAddTask = (e) => {
+    e.preventDefault();
+    const isValidFormat = /^\d+(:[0-5]?\d)?$/.test(taskInput.trim());
+    if (!isValidFormat) {
+      return; 
+    }
+    const calculatedSeconds = parseToSeconds(taskInput);
+    if (calculatedSeconds > 0) {
+      setTasks([...tasks, { id: Date.now(), rawInput: taskInput, seconds: calculatedSeconds }]);
+      setTaskInput('');
+    }
+  };
+
+  const removeTask = (idToRemove) => {
+    setTasks(tasks.filter(task => task.id !== idToRemove));
+  };
 
   // 1. Fetch user role from profiles table
   const fetchUserRole = useCallback(async () => {
@@ -155,17 +226,26 @@ export default function TaskLogger({ session, onUpdate }) {
       return;
     }
 
-    // Strict regex validation for HH:MM format (e.g. 20:45 or 8:30)
-    const isValidFormat = /^(\d+):([0-5]\d)$/.test(stopTimeInput.trim());
+    // Accept both HH:MM and HH:MM:SS formats
+    const isValidFormat = /^(\d+):([0-5]\d)(:[0-5]\d)?$/.test(stopTimeInput.trim());
     if (!isValidFormat) {
-      const msg = "Invalid format. Please enter time as HH:MM or H:MM (e.g., 20:45).";
+      const msg = "Invalid format. Please enter time as HH:MM or HH:MM:SS (e.g., 20:45 or 20:45:30).";
       setFieldError(msg);
       toast.error(msg);
       return;
     }
 
-    const newStopMinutes = timeToTotalMinutes(stopTimeInput);
-    if (newStopMinutes === null) {
+    let newStopSeconds;
+    try {
+      newStopSeconds = timeToTotalSeconds(stopTimeInput);
+    } catch (parseErr) {
+      const msg = `Invalid time: ${parseErr.message}`;
+      setFieldError(msg);
+      toast.error(msg);
+      return;
+    }
+
+    if (newStopSeconds === 0) {
       const msg = "Invalid time format.";
       setFieldError(msg);
       toast.error(msg);
@@ -173,17 +253,17 @@ export default function TaskLogger({ session, onUpdate }) {
     }
 
     // Time Travel Validation: Stop time must be greater than current locked start time
-    if (newStopMinutes <= lockedStartMinutes) {
+    if (newStopSeconds <= lockedStartSeconds) {
       const timeTravelErr = "Stop time must be greater than the current locked start time.";
       setFieldError(timeTravelErr);
       toast.error(timeTravelErr);
       return;
     }
 
-    // Pool Cap Validation: Stop time cannot exceed 4800 minutes (80 hours)
-    if (newStopMinutes > MAX_POOL_MINUTES) {
-      const maxHHMM = minutesToHHMMString(MAX_POOL_MINUTES);
-      const capErr = `Cumulative pool limit exceeded! Stop time cannot exceed 80:00 (${MAX_POOL_MINUTES} mins). Max allowable is ${maxHHMM}.`;
+    // Pool Cap Validation: Stop time cannot exceed 80 hours = 288000 seconds
+    if (newStopSeconds > MAX_POOL_SECONDS) {
+      const maxDisplay = secondsToHHMMString(MAX_POOL_SECONDS);
+      const capErr = `Cumulative pool limit exceeded! Stop time cannot exceed 80:00 (${MAX_POOL_SECONDS}s). Max allowable is ${maxDisplay}.`;
       setFieldError(capErr);
       toast.error(capErr);
       return;
@@ -191,35 +271,37 @@ export default function TaskLogger({ session, onUpdate }) {
 
     setSubmitting(true);
     try {
-      // Race Condition Pre-Flight: Query DB for absolute latest stop_minutes
+      // Race Condition Pre-Flight: Query DB for absolute latest stop_time_seconds
+      // (using the exact seconds column as the source of truth)
       const { data: latestCheck, error: checkErr } = await supabase
         .from("time_logs")
-        .select("stop_minutes")
+        .select("stop_time_seconds")
         .eq("account_id", activeAccount?.id)
-        .order("stop_minutes", { ascending: false })
+        .order("stop_time_seconds", { ascending: false })
         .limit(1);
 
       if (checkErr) throw checkErr;
 
-      const latestDbMinutes =
-        latestCheck && latestCheck.length > 0 ? latestCheck[0].stop_minutes : 0;
+      // Extract the absolute seconds from the DB
+      const latestDbSeconds =
+        latestCheck && latestCheck.length > 0 ? latestCheck[0].stop_time_seconds : 0;
 
       // Abort if timeline collision detected
-      if (latestDbMinutes > lockedStartMinutes) {
-        // Optimistically update SWR cache with the collision value
-        refreshLatestStop(latestDbMinutes, { revalidate: false });
+      if (latestDbSeconds > lockedStartSeconds) {
+        // Optimistically update SWR cache with the collision value (in seconds)
+        refreshLatestStop(latestDbSeconds, { revalidate: false });
         const collisionErr = "Timeline collision. Another user just logged time. Please refresh.";
         toast.error(collisionErr);
         setSubmitting(false);
         return;
       }
 
-      // Execute Supabase insert with is_end_of_day boolean
+      // Execute Supabase insert with canonical seconds (Phase 2)
       const insertPayload = {
         account_id: activeAccount?.id,
         user_id: session.user.id,
-        start_minutes: lockedStartMinutes,
-        stop_minutes: newStopMinutes,
+        start_time_seconds: lockedStartSeconds,
+        stop_time_seconds: newStopSeconds,
         is_end_of_day: isEndOfDay,
       };
       console.log("TRACE 1: TaskLogger Payload:", JSON.parse(JSON.stringify(insertPayload)));
@@ -233,14 +315,14 @@ export default function TaskLogger({ session, onUpdate }) {
       if (insertErr) throw insertErr;
 
       toast.success(
-        `Time log submitted successfully! Handoff logged from ${minutesToHHMMString(
-          lockedStartMinutes
+        `Time log submitted successfully! Handoff logged from ${secondsToSmartDisplay(
+          lockedStartSeconds
         )} to ${stopTimeInput}${isEndOfDay ? " (Final log for day)" : ""}.`
       );
       setStopTimeInput("");
       setIsEndOfDay(false);
       
-      // Refresh global highest stop_minutes for next handoff
+      // Refresh global highest stop time for next handoff
       await refreshLatestStop();
 
       // Part 2: Trigger global refresh for parent dashboard
@@ -264,9 +346,9 @@ export default function TaskLogger({ session, onUpdate }) {
       // Find the latest entry in time_logs table
       const { data: latestRows, error: findErr } = await supabase
         .from("time_logs")
-        .select("id, start_minutes, stop_minutes")
+        .select("id, start_time_seconds, stop_time_seconds")
         .eq("account_id", activeAccount?.id)
-        .order("stop_minutes", { ascending: false })
+        .order("stop_time_seconds", { ascending: false })
         .limit(1);
 
       if (findErr) throw findErr;
@@ -300,7 +382,7 @@ export default function TaskLogger({ session, onUpdate }) {
     }
   };
 
-  const remainingPoolHours = ((MAX_POOL_MINUTES - lockedStartMinutes) / 60).toFixed(1);
+  const remainingPoolHours = ((MAX_POOL_SECONDS - lockedStartSeconds) / 3600).toFixed(1);
 
   const isLockedByOther = activeTypists.length > 0;
 
@@ -333,7 +415,7 @@ export default function TaskLogger({ session, onUpdate }) {
               value={
                 fetchingLatest
                   ? "Loading..."
-                  : `${minutesToHHMMString(lockedStartMinutes)} (Auto-synced)`
+                  : `${secondsToSmartDisplay(lockedStartSeconds)} (Auto-synced)`
               }
               className="w-full pl-10 pr-4 py-2.5 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-300 text-sm font-medium font-mono tabular-nums cursor-not-allowed select-none transition-colors"
             />
@@ -346,7 +428,7 @@ export default function TaskLogger({ session, onUpdate }) {
             htmlFor="stopTimeInput"
             className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5"
           >
-            STOP TIME (HH:MM)
+            STOP TIME (HH:MM or HH:MM:SS)
           </label>
           <div className="relative w-full">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
@@ -355,7 +437,7 @@ export default function TaskLogger({ session, onUpdate }) {
             <input
               id="stopTimeInput"
               type="text"
-              placeholder={isLockedByOther ? `${activeTypists[0]} is typing...` : "e.g. 20:45"}
+              placeholder={isLockedByOther ? `${activeTypists[0]} is typing...` : "e.g. 20:45 or 20:45:30"}
               value={stopTimeInput}
               onChange={handleStopTimeChange}
               onFocus={handleFocus}
@@ -373,23 +455,34 @@ export default function TaskLogger({ session, onUpdate }) {
               {fieldError}
             </span>
           )}
+
         </div>
 
-        {/* Checkbox: End of Day Flag */}
-        <div className="flex items-center gap-2.5 pt-0.5">
-          <input
-            id="isEndOfDay"
-            type="checkbox"
-            checked={isEndOfDay}
-            onChange={(e) => setIsEndOfDay(e.target.checked)}
-            className="w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors cursor-pointer"
-          />
-          <label
-            htmlFor="isEndOfDay"
-            className="text-sm font-medium text-slate-500 dark:text-slate-400 cursor-pointer select-none"
+        {/* Checkbox: End of Day Flag & Aggregator Trigger */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6">
+          <div className="flex items-center gap-2.5">
+            <input
+              id="isEndOfDay"
+              type="checkbox"
+              checked={isEndOfDay}
+              onChange={(e) => setIsEndOfDay(e.target.checked)}
+              className="w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors cursor-pointer"
+            />
+            <label
+              htmlFor="isEndOfDay"
+              className="text-sm font-medium text-slate-500 dark:text-slate-400 cursor-pointer select-none"
+            >
+              Mark as final log for the day
+            </label>
+          </div>
+          
+          <button 
+            type="button" 
+            onClick={() => setIsAggregatorOpen(true)} 
+            className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors w-full sm:w-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
-            Mark as final log for the day
-          </label>
+            ✨ Task Aggregator
+          </button>
         </div>
 
         {/* Primary Action Button */}
@@ -468,6 +561,91 @@ export default function TaskLogger({ session, onUpdate }) {
           </div>
         </div>
       )}
+      {/* Task Aggregator Modal */}
+      <AnimatePresence>
+        {isAggregatorOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-6 relative"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white">Task Aggregator</h3>
+                <button type="button" onClick={() => setTasks([])} className="text-xs text-red-400 hover:text-red-300 transition-colors ml-auto mr-4">Clear All</button>
+                <button
+                  type="button"
+                  onClick={closeAggregatorModal}
+                  className="text-slate-400 hover:text-white transition-colors p-1"
+                >
+                  <span className="text-2xl leading-none">&times;</span>
+                </button>
+              </div>
+              
+              <form onSubmit={handleAddTask} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="e.g. 15 or 15:30"
+                  value={taskInput}
+                  onChange={(e) => setTaskInput(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-500"
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  Add
+                </button>
+              </form>
+
+              {tasks.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-4 max-h-48 overflow-y-auto pr-1">
+                  {tasks.map((task, index) => (
+                    <div key={task.id} className="flex items-center gap-2 bg-slate-800 text-slate-300 px-3 py-1.5 rounded-md text-sm border border-slate-700">
+                      <span>{task.rawInput}</span>
+                      {index === tasks.length - 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeTask(task.id)}
+                          className="text-slate-500 hover:text-slate-300 transition-colors focus:outline-none focus:ring-1 focus:ring-slate-400 rounded"
+                        >
+                          &times;
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-center justify-between">
+                <span className="text-slate-400 text-sm">Total: <b className="text-white">{displayHours > 0 ? `${displayHours}h ` : ''}{displayMins > 0 ? `${displayMins}m ` : ''}{displaySecs}s</b></span>
+                <span className="text-slate-400 text-sm">Stop Time: <span className="text-blue-400 font-semibold tracking-wide">{projectedStopTime}</span></span>
+              </div>
+
+              <button 
+                type="button" 
+                onClick={() => {
+                  setStopTimeInput(projectedStopTime);
+                  setTasks([]);
+                  closeAggregatorModal();
+                }}
+                className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                Apply to Stop Time &rarr;
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </BaseCard>
   );
 }

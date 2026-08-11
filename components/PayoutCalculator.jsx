@@ -6,11 +6,10 @@ import TimelineVisualizer from "./TimelineVisualizer";
 import { Calculator, Clock, Lock, RefreshCw, Users, User, Copy, CalendarDays, CheckCircle2 } from "lucide-react";
 import {
   usePayoutCalculator,
-  minutesToHHMMString,
-  formatHHMMSS,
   preciseRound,
 } from "@/hooks/usePayoutCalculator";
 import { useAccount } from "@/context/AccountContext";
+import { secondsToHHMMSSString } from "@/utils/timeUtils";
 
 export default function PayoutCalculator({ session }) {
   const { activeAccount } = useAccount();
@@ -44,7 +43,7 @@ export default function PayoutCalculator({ session }) {
       const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
       const dateNum = date.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit" });
       const key = `${dayName} ${dateNum}`;
-      const duration = (log.stop_minutes || 0) - (log.start_minutes || 0);
+      const duration = (log.stop_time_seconds || 0) - (log.start_time_seconds || 0);
       if (duration > 0) dailyTotals[key] = (dailyTotals[key] || 0) + duration;
     });
 
@@ -58,13 +57,13 @@ export default function PayoutCalculator({ session }) {
       ``, // Blank line
     ];
 
-    Object.entries(dailyTotals).forEach(([dateStr, mins]) => {
+    Object.entries(dailyTotals).forEach(([dateStr, secs]) => {
       // Using spaces instead of tabs for universal alignment
-      reportLines.push(`${dateStr}:      ${formatHHMMSS(mins)}`);
+      reportLines.push(`${dateStr}:      ${secondsToHHMMSSString(secs)}`);
     });
 
     reportLines.push(``); // Blank line
-    reportLines.push(`Total hours-  ${formatHHMMSS(myTotalMinutes)} or ${preciseRound(myTotalMinutes / 60)}`);
+    reportLines.push(`Total hours-  ${secondsToHHMMSSString(myTotalMinutes)} or ${preciseRound(myTotalMinutes / 3600)}`);
     reportLines.push(`Productive hours: ${myRow.payoutDecimalHours}`);
 
     // \r\n guarantees the text wraps line-under-line in all target applications
@@ -148,7 +147,7 @@ export default function PayoutCalculator({ session }) {
                 value={
                   isLoading
                     ? "Loading..."
-                    : `${minutesToHHMMString(myTotalMinutes)} (Auto-synced)`
+                    : `${secondsToHHMMSSString(myTotalMinutes)} (Auto-synced)`
                 }
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-300 text-sm font-medium font-mono tabular-nums cursor-not-allowed select-none transition-colors"
               />
@@ -172,7 +171,7 @@ export default function PayoutCalculator({ session }) {
                 value={
                   isLoading
                     ? "Loading..."
-                    : `${minutesToHHMMString(teamTotalMinutes)} (Auto-synced)`
+                    : `${secondsToHHMMSSString(teamTotalMinutes)} (Auto-synced)`
                 }
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-300 text-sm font-medium font-mono tabular-nums cursor-not-allowed select-none transition-colors"
               />

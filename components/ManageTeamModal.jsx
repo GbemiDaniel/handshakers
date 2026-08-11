@@ -207,12 +207,12 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
                 <UserPlus className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 <span>Add Member to Workspace</span>
               </div>
-              <form onSubmit={handleAddMember} className="flex flex-col sm:flex-row gap-3">
+              <form onSubmit={handleAddMember} className="flex flex-col sm:flex-row gap-4">
                 <select
                   value={selectedUserId}
                   onChange={(e) => setSelectedUserId(e.target.value)}
                   disabled={availableProfiles.length === 0 || isAdding}
-                  className="flex-1 h-11 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors disabled:opacity-50 min-w-0"
+                  className="w-full flex-1 px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-base md:text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors disabled:opacity-50 min-w-0"
                 >
                   {availableProfiles.length === 0 ? (
                     <option value="">No available profiles to add</option>
@@ -227,7 +227,7 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
                 <button
                   type="submit"
                   disabled={!selectedUserId || isAdding}
-                  className="h-11 px-6 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors shrink-0 flex items-center justify-center gap-1.5 focus:outline-none w-full sm:w-auto"
+                  className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 text-white text-base md:text-sm font-semibold rounded-xl shadow-xs transition-colors shrink-0 flex items-center justify-center gap-1.5 focus:outline-none"
                 >
                   {isAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : <><UserPlus className="w-4 h-4" /><span>Add</span></>}
                 </button>
