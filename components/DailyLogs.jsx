@@ -46,6 +46,16 @@ function groupLogsIntoShifts(logs, profilesMap, currentUserId) {
     const duration = (log.stop_time_seconds || 0) - (log.start_time_seconds || 0);
     if (duration <= 0) continue;
 
+    // Check for zero-drop failsafe: split if odometer resets
+    if (currentShift && currentShift.sessions.length > 0) {
+      const previousLog = currentShift.sessions[currentShift.sessions.length - 1];
+      const isZeroDrop = log.start_time_seconds < previousLog.stopSeconds;
+      if (isZeroDrop) {
+        shifts.push(currentShift);
+        currentShift = null;
+      }
+    }
+
     // Initialize a new shift if currentShift is null
     if (!currentShift) {
       currentShift = {

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { usePayoutCalculator } from "@/hooks/usePayoutCalculator";
-import { Gauge, Sparkles, RefreshCw } from "lucide-react";
+import { Gauge, RefreshCw } from "lucide-react";
 import { secondsToSmartDisplay } from "@/utils/timeUtils";
 
 export default function FuelGauge() {
@@ -69,7 +69,6 @@ export default function FuelGauge() {
 
         <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
           <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-xs font-semibold tabular-nums ${badgeColorClass}`}>
-            <Sparkles className="w-3 h-3" />
             {rawPercent}%
           </span>
           <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 font-mono tabular-nums">

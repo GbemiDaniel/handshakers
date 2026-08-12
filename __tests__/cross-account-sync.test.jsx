@@ -137,9 +137,9 @@ describe("latestGlobalStopFetcher", () => {
     expect(mockFrom).toHaveBeenCalledWith("time_logs");
   });
 
-  it("selects stop_time_seconds column", async () => {
+  it("selects stop_time_seconds and created_at columns", async () => {
     await latestGlobalStopFetcher(["latest-global-stop", TEST_ACCOUNT_ID]);
-    expect(mockSelect).toHaveBeenCalledWith("stop_time_seconds");
+    expect(mockSelect).toHaveBeenCalledWith("stop_time_seconds, created_at");
   });
 
   it("filters by account_id", async () => {
@@ -147,9 +147,9 @@ describe("latestGlobalStopFetcher", () => {
     expect(mockEq).toHaveBeenCalledWith("account_id", TEST_ACCOUNT_ID);
   });
 
-  it("orders descending and limits to 1", async () => {
+  it("orders by created_at descending and limits to 1", async () => {
     await latestGlobalStopFetcher(["latest-global-stop", TEST_ACCOUNT_ID]);
-    expect(mockOrder).toHaveBeenCalledWith("stop_time_seconds", {
+    expect(mockOrder).toHaveBeenCalledWith("created_at", {
       ascending: false,
     });
     expect(mockLimit).toHaveBeenCalledWith(1);

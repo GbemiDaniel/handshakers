@@ -7,7 +7,7 @@ import { useLatestGlobalStop } from "@/hooks/useLatestGlobalStop";
 import { toast } from "sonner";
 import { useAccount } from "@/context/AccountContext";
 import { timeToTotalSeconds, secondsToHHMMString, secondsToSmartDisplay } from "@/utils/timeUtils";
-import { Clock, Lock, ArrowRight, AlertCircle, CheckCircle2, Loader2, Sparkles, Undo2, AlertTriangle } from "lucide-react";
+import { Clock, Lock, ArrowRight, AlertCircle, CheckCircle2, Loader2, Undo2, AlertTriangle } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 export default function TaskLogger({ session, onUpdate }) {
@@ -271,13 +271,13 @@ export default function TaskLogger({ session, onUpdate }) {
 
     setSubmitting(true);
     try {
-      // Race Condition Pre-Flight: Query DB for absolute latest stop_time_seconds
-      // (using the exact seconds column as the source of truth)
+      // Race Condition Pre-Flight: Query DB for the chronologically latest log
+      // (ordered by created_at to match useLatestGlobalStop's corrected query)
       const { data: latestCheck, error: checkErr } = await supabase
         .from("time_logs")
-        .select("stop_time_seconds")
+        .select("stop_time_seconds, created_at")
         .eq("account_id", activeAccount?.id)
-        .order("stop_time_seconds", { ascending: false })
+        .order("created_at", { ascending: false })
         .limit(1);
 
       if (checkErr) throw checkErr;
@@ -392,7 +392,6 @@ export default function TaskLogger({ session, onUpdate }) {
       subtitle="Enter your stop time to pass on to the next person. Logged times are auto-synced with the team."
       headerAction={
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-100 dark:border-blue-800/60 text-blue-600 dark:text-blue-400 text-xs font-semibold whitespace-nowrap">
-          <Sparkles className="w-3.5 h-3.5 shrink-0" />
           <span>{remainingPoolHours}h Pool Remaining</span>
         </div>
       }
@@ -479,9 +478,9 @@ export default function TaskLogger({ session, onUpdate }) {
           <button 
             type="button" 
             onClick={() => setIsAggregatorOpen(true)} 
-            className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors w-full sm:w-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-blue-400 bg-blue-500/10 rounded-lg w-full sm:w-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 cursor-pointer active:scale-95 border border-blue-500/50 shadow-[0_0_8px_rgba(59,130,246,0.4)] hover:border-blue-400 hover:shadow-[0_0_12px_rgba(59,130,246,0.7)] hover:bg-blue-900/40 transition-all duration-200 ease-in-out"
           >
-            ✨ Task Aggregator
+            Task Aggregator
           </button>
         </div>
 

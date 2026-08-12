@@ -3,7 +3,7 @@ import useSWR from "swr";
 import { toast } from "sonner";
 import { supabase } from "@/utils/supabase";
 import { useAccount } from "@/context/AccountContext";
-import { timeToTotalSeconds, secondsToHHMMString, secondsToHHMMSSString } from "@/utils/timeUtils";
+import { timeToTotalSeconds, secondsToHHMMString, secondsToHHMMSSString, getCurrentCycleBoundaries } from "@/utils/timeUtils";
 
 export const preciseRound = (num) => {
   return (Math.round((num + Number.EPSILON) * 1000) / 1000).toFixed(3);
@@ -95,65 +95,9 @@ export function usePayoutCalculator({ session }) {
     { refreshInterval: 2000 }
   );
 
+  // Delegate cycle boundary math to the shared utility (single source of truth)
   const { pacificMidnightUTC, pacificNoonUTC, dateLabels } = useMemo(() => {
-    const now = new Date();
-    
-    const laFormatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Los_Angeles',
-      year: 'numeric', month: 'numeric', day: 'numeric',
-      hour: 'numeric', minute: 'numeric', second: 'numeric',
-      hour12: false
-    });
-    
-    const laLocal = new Date(laFormatter.format(now));
-    
-    const day = laLocal.getDay();
-    const diff = laLocal.getDate() - day + (day === 0 ? -6 : 1);
-    
-    const y = laLocal.getFullYear();
-    const m = laLocal.getMonth();
-    const d = diff;
-    
-    const approximateEpoch = Date.UTC(y, m, d, 8, 0, 0, 0);
-    
-    const offsetFormatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Los_Angeles',
-      timeZoneName: 'shortOffset'
-    });
-    
-    const parts = offsetFormatter.formatToParts(new Date(approximateEpoch));
-    const offsetStr = parts.find(p => p.type === 'timeZoneName').value;
-    
-    let offsetHours = -8;
-    const match = offsetStr.match(/GMT([+-]\d+)/);
-    if (match) {
-      offsetHours = parseInt(match[1], 10);
-    }
-    
-    const midnightEpoch = Date.UTC(y, m, d, 0, 0, 0, 0) - (offsetHours * 60 * 60 * 1000);
-    const noonEpoch = midnightEpoch + (12 * 60 * 60 * 1000);
-    
-    const currentStart = new Date(midnightEpoch);
-    const previousStart = new Date(currentStart);
-    previousStart.setDate(previousStart.getDate() - 7);
-    
-    const currentWeekEnd = new Date(currentStart);
-    currentWeekEnd.setDate(currentWeekEnd.getDate() + 6);
-    
-    const previousWeekEnd = new Date(previousStart);
-    previousWeekEnd.setDate(previousWeekEnd.getDate() + 6);
-    
-    const formatDate = (dateObj) => dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const labels = {
-      current: `${formatDate(currentStart)} - ${formatDate(currentWeekEnd)}`,
-      previous: `${formatDate(previousStart)} - ${formatDate(previousWeekEnd)}`
-    };
-
-    return {
-      pacificMidnightUTC: midnightEpoch,
-      pacificNoonUTC: noonEpoch,
-      dateLabels: labels
-    };
+    return getCurrentCycleBoundaries();
   }, []);
 
   useEffect(() => {
