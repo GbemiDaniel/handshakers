@@ -4,11 +4,16 @@ import React, { useState, useEffect } from "react";
 import { usePayoutCalculator } from "@/hooks/usePayoutCalculator";
 import { Gauge, RefreshCw } from "lucide-react";
 import { secondsToSmartDisplay } from "@/utils/timeUtils";
+import { useAccount } from "@/context/AccountContext";
 
 export default function FuelGauge() {
   const [animatedPercent, setAnimatedPercent] = useState(0);
 
-  const MAX_POOL_SECONDS = 288000; // 80 hours strictly (80 * 3600)
+  const { activeAccount } = useAccount();
+
+  // Safely fallback to 60
+  const poolLimitHours = activeAccount?.weekly_pool_hours || 60;
+  const poolLimitSeconds = poolLimitHours * 3600;
 
   const { state, actions } = usePayoutCalculator({});
   // Aliased because the API surface kept the original key name to prevent breakage
@@ -17,7 +22,8 @@ export default function FuelGauge() {
 
   // Trigger smooth transition animation on mount or data fetch
   useEffect(() => {
-    const rawPercent = (currentPoolSeconds / MAX_POOL_SECONDS) * 100;
+    // Calculate width percentage (capped at 100% so the UI doesn't break if over limit)
+    const rawPercent = (currentPoolSeconds / poolLimitSeconds) * 100;
     const cappedPercent = Math.min(Math.max(rawPercent, 0), 100);
 
     const timer = setTimeout(() => {
@@ -25,27 +31,26 @@ export default function FuelGauge() {
     }, 50);
 
     return () => clearTimeout(timer);
-  }, [currentPoolSeconds]);
+  }, [currentPoolSeconds, poolLimitSeconds]);
 
   // Dynamic Color Logic
   let fillColorClass = "bg-blue-600 dark:bg-blue-500";
   let badgeColorClass = "bg-blue-50 dark:bg-blue-950/60 border-blue-100 dark:border-blue-800/60 text-blue-600 dark:text-blue-400";
   let glowBorderClass = "border-slate-200/80 dark:border-slate-800";
 
-  // 4800 minutes is 288000 seconds (100% capacity)
-  if (currentPoolSeconds >= 288000) {
+  if (currentPoolSeconds >= poolLimitSeconds) {
     fillColorClass = "bg-red-500";
     badgeColorClass = "bg-red-50 dark:bg-red-950/60 border-red-200 dark:border-red-800/60 text-red-700 dark:text-red-400";
     glowBorderClass = "border-red-300 dark:border-red-800/80 ring-2 ring-red-100 dark:ring-red-950/50";
   } 
-  // 4320 minutes is 259200 seconds (90% capacity threshold)
-  else if (currentPoolSeconds >= 259200) {
+  // 90% capacity threshold
+  else if (currentPoolSeconds >= poolLimitSeconds * 0.9) {
     fillColorClass = "bg-amber-500";
     badgeColorClass = "bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800/60 text-amber-700 dark:text-amber-400";
     glowBorderClass = "border-amber-300 dark:border-amber-800/80 ring-2 ring-amber-100 dark:ring-amber-950/50";
   }
 
-  const rawPercent = ((currentPoolSeconds / MAX_POOL_SECONDS) * 100).toFixed(1);
+  const rawPercent = ((currentPoolSeconds / poolLimitSeconds) * 100).toFixed(1);
 
   return (
     <div className={`@container w-full bg-white dark:bg-slate-900 border ${glowBorderClass} rounded-2xl p-4 sm:p-5 shadow-xs space-y-3 transition-all duration-200 ease-in-out`}>
@@ -72,7 +77,7 @@ export default function FuelGauge() {
             {rawPercent}%
           </span>
           <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 font-mono tabular-nums">
-            {secondsToSmartDisplay(currentPoolSeconds)} / 80:00 Used
+            {secondsToSmartDisplay(currentPoolSeconds)} / {poolLimitHours}:00 Used
           </span>
         </div>
       </div>

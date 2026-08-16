@@ -3,23 +3,19 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/utils/supabase";
+import { useAdminStore } from "@/store/useAdminStore";
 
 export const AccountContext = createContext({
-  accounts: [],
   activeAccount: null,
   setActiveAccount: () => {},
-  isLoadingAccounts: true,
   isSuperAdmin: false,
-  refreshAccounts: () => {},
 });
 
 export function AccountProvider({ children, session }) {
   const params = useParams();
   const urlAccountId = params?.accountId;
 
-  const [accounts, setAccounts] = useState([]);
   const [activeAccount, setActiveAccount] = useState(null);
-  const [isLoadingAccounts, setIsLoadingAccounts] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   const userId = session?.user?.id;
@@ -55,63 +51,26 @@ export function AccountProvider({ children, session }) {
     fetchSuperAdminStatus();
   }, [userId]);
 
-  // 2. Fetch available accounts for the current user
-  const fetchAccounts = useCallback(async () => {
-    if (!userId) {
-      setAccounts([]);
-      setActiveAccount(null);
-      setIsLoadingAccounts(false);
-      return;
-    }
+  // Subscribe to Zustand store for workspaces
+  const workspaces = useAdminStore((state) => state.workspaces);
 
-    setIsLoadingAccounts(true);
-    try {
-      const { data, error } = await supabase.from("accounts").select("*");
-
-      if (!error && data && data.length > 0) {
-        setAccounts(data);
-        setActiveAccount((prev) => {
-          if (prev && data.some((acc) => acc.id === prev.id)) {
-            return prev;
-          }
-          return data[0];
-        });
-      } else {
-        setAccounts([]);
-        setActiveAccount(null);
-      }
-    } catch (err) {
-      console.error("Error fetching accounts:", err);
-      setAccounts([]);
-      setActiveAccount(null);
-    } finally {
-      setIsLoadingAccounts(false);
-    }
-  }, [userId]);
-
+  // Synchronize activeAccount with urlAccountId from URL parameters
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchAccounts();
-  }, [fetchAccounts]);
-
-  // 3. Synchronize activeAccount with urlAccountId from URL parameters
-  useEffect(() => {
-    if (urlAccountId && accounts.length > 0) {
-      const matchedAccount = accounts.find((acc) => String(acc.id) === String(urlAccountId));
+    if (urlAccountId && workspaces.length > 0) {
+      const matchedAccount = workspaces.find((acc) => String(acc.id) === String(urlAccountId));
       if (matchedAccount) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setActiveAccount(matchedAccount);
       }
+    } else if (!urlAccountId && workspaces.length > 0 && !activeAccount) {
+      // Fallback for default active account if no URL param
+      setActiveAccount(workspaces[0]);
     }
-  }, [urlAccountId, accounts]);
+  }, [urlAccountId, workspaces]);
 
   const value = {
-    accounts,
     activeAccount,
     setActiveAccount,
-    isLoadingAccounts,
     isSuperAdmin,
-    refreshAccounts: fetchAccounts,
   };
 
   return (

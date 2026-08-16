@@ -78,8 +78,11 @@ export const fetchTeamData = async (accountId) => {
   };
 };
 
-export function usePayoutCalculator({ session }) {
+export function usePayoutCalculator({ session } = {}) {
   const { activeAccount } = useAccount();
+  const poolLimitHours = activeAccount?.weekly_pool_hours || 60;
+  const maxPoolSeconds = poolLimitHours * 3600;
+
   const [platformTimeInput, setPlatformTimeInput] = useState("");
   const [calculating, setCalculating] = useState(false);
   const [calculationResult, setCalculationResult] = useState(null);
@@ -123,7 +126,7 @@ export function usePayoutCalculator({ session }) {
     const members = data?.members;
 
     const { teamLogs, currentCycleTotalSeconds, remainingMinutes } = useMemo(() => {
-      if (!logs) return { teamLogs: [], currentCycleTotalSeconds: 0, remainingMinutes: 288000 };
+      if (!logs) return { teamLogs: [], currentCycleTotalSeconds: 0, remainingMinutes: maxPoolSeconds };
 
       const sortedLogs = [...logs].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
       
@@ -187,9 +190,9 @@ export function usePayoutCalculator({ session }) {
       return {
         teamLogs: returnedLogs,
         currentCycleTotalSeconds: currentTotal,
-        remainingMinutes: 288000 - currentTotal
+        remainingMinutes: maxPoolSeconds - currentTotal
       };
-    }, [logs, payCycle, pacificMidnightUTC, pacificNoonUTC]);
+    }, [logs, payCycle, pacificMidnightUTC, pacificNoonUTC, maxPoolSeconds]);
 
     const profilesMap = useMemo(() => {
       if (!profiles) return {};

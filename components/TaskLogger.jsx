@@ -25,8 +25,8 @@ export default function TaskLogger({ session, onUpdate }) {
 
   const [fieldError, setFieldError] = useState("");
 
-  // Maximum cumulative pool cap: 80 hours = 288000 seconds
-  const MAX_POOL_SECONDS = 288000;
+  const poolLimitHours = activeAccount?.weekly_pool_hours || 60;
+  const MAX_POOL_SECONDS = poolLimitHours * 3600;
 
   // Shared SWR hook: auto-polls the latest global stop time (in seconds) every 2s.
   // Shared cache key with FuelGauge — mutating here updates both components.
@@ -260,10 +260,10 @@ export default function TaskLogger({ session, onUpdate }) {
       return;
     }
 
-    // Pool Cap Validation: Stop time cannot exceed 80 hours = 288000 seconds
+    // Pool Cap Validation: Stop time cannot exceed weekly pool limit
     if (newStopSeconds > MAX_POOL_SECONDS) {
       const maxDisplay = secondsToHHMMString(MAX_POOL_SECONDS);
-      const capErr = `Cumulative pool limit exceeded! Stop time cannot exceed 80:00 (${MAX_POOL_SECONDS}s). Max allowable is ${maxDisplay}.`;
+      const capErr = `Cumulative pool limit exceeded! Stop time cannot exceed ${poolLimitHours}:00 (${MAX_POOL_SECONDS}s). Max allowable is ${maxDisplay}.`;
       setFieldError(capErr);
       toast.error(capErr);
       return;
@@ -382,7 +382,9 @@ export default function TaskLogger({ session, onUpdate }) {
     }
   };
 
-  const remainingPoolHours = ((MAX_POOL_SECONDS - lockedStartSeconds) / 3600).toFixed(1);
+  const rawRemainingHours = (MAX_POOL_SECONDS - (lockedStartSeconds || 0)) / 3600;
+  const isOverLimit = rawRemainingHours < 0;
+  const displayRemainingHours = Math.abs(rawRemainingHours).toFixed(1);
 
   const isLockedByOther = activeTypists.length > 0;
 
@@ -391,8 +393,16 @@ export default function TaskLogger({ session, onUpdate }) {
       title="Log Team Time"
       subtitle="Enter your stop time to pass on to the next person. Logged times are auto-synced with the team."
       headerAction={
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-100 dark:border-blue-800/60 text-blue-600 dark:text-blue-400 text-xs font-semibold whitespace-nowrap">
-          <span>{remainingPoolHours}h Pool Remaining</span>
+        <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-semibold whitespace-nowrap transition-colors ${
+          isOverLimit 
+            ? 'bg-red-50 dark:bg-red-950/60 border-red-100 dark:border-red-800/60 text-red-600 dark:text-red-400' 
+            : 'bg-blue-50 dark:bg-blue-950/60 border-blue-100 dark:border-blue-800/60 text-blue-600 dark:text-blue-400'
+        }`}>
+          <span>
+            {isOverLimit 
+              ? `${displayRemainingHours}h Over Limit` 
+              : `${displayRemainingHours}h Pool Remaining`}
+          </span>
         </div>
       }
     >
