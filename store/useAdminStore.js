@@ -24,6 +24,13 @@ export const useAdminStore = create((set) => ({
     }))
   })),
 
+  // 1b. Update Workspace: Optimistically updates a workspace's properties
+  updateWorkspaceOptimistic: (workspaceId, updatedFields) => set((state) => ({
+    workspaces: state.workspaces.map((workspace) =>
+      workspace.id === workspaceId ? { ...workspace, ...updatedFields } : workspace
+    )
+  })),
+
   // 2. Assign Tasker: Updates a tasker's membership array in the UI instantly
   assignTaskerOptimistic: (taskerId, newMembershipRecord) => set((state) => ({
     taskers: state.taskers.map((tasker) => 

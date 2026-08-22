@@ -6,7 +6,8 @@ import { supabase } from "@/utils/supabase";
 import { useLatestGlobalStop } from "@/hooks/useLatestGlobalStop";
 import { toast } from "sonner";
 import { useAccount } from "@/context/AccountContext";
-import { timeToTotalSeconds, secondsToHHMMString, secondsToSmartDisplay } from "@/utils/timeUtils";
+import { useAdminStore } from "@/store/useAdminStore";
+import { timeToTotalSeconds, secondsToHHMMString, secondsToSmartDisplay, getCurrentCycleBoundaries } from "@/utils/timeUtils";
 import { Clock, Lock, ArrowRight, AlertCircle, CheckCircle2, Loader2, Undo2, AlertTriangle } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -15,7 +16,10 @@ export default function TaskLogger({ session, onUpdate }) {
   const [stopTimeInput, setStopTimeInput] = useState("");
   const [isEndOfDay, setIsEndOfDay] = useState(false);
   const [userRole, setUserRole] = useState("member");
-  const { activeAccount } = useAccount();
+  const { activeAccount: contextAccount } = useAccount();
+  const activeAccount = useAdminStore(state => 
+    state.workspaces.find(w => w.id === contextAccount?.id)
+  ) || contextAccount;
 
   const [showRollbackModal, setShowRollbackModal] = useState(false);
   const [isAggregatorOpen, setIsAggregatorOpen] = useState(false);
@@ -25,7 +29,7 @@ export default function TaskLogger({ session, onUpdate }) {
 
   const [fieldError, setFieldError] = useState("");
 
-  const poolLimitHours = activeAccount?.weekly_pool_hours || 60;
+  const poolLimitHours = activeAccount?.weekly_pool_hours ?? 0;
   const MAX_POOL_SECONDS = poolLimitHours * 3600;
 
   // Shared SWR hook: auto-polls the latest global stop time (in seconds) every 2s.
@@ -282,9 +286,19 @@ export default function TaskLogger({ session, onUpdate }) {
 
       if (checkErr) throw checkErr;
 
-      // Extract the absolute seconds from the DB
-      const latestDbSeconds =
-        latestCheck && latestCheck.length > 0 ? latestCheck[0].stop_time_seconds : 0;
+      // Extract the absolute seconds from the DB, applying the cycle boundary check
+      let latestDbSeconds = 0;
+      if (latestCheck && latestCheck.length > 0) {
+        const latestLog = latestCheck[0];
+        const { pacificMidnightUTC } = getCurrentCycleBoundaries();
+        const logCreatedAt = new Date(latestLog.created_at).getTime();
+
+        // If the latest log is from the current cycle, use its stop_time_seconds
+        // Otherwise, it resets to 0, exactly like useLatestGlobalStop
+        if (logCreatedAt >= pacificMidnightUTC) {
+          latestDbSeconds = latestLog.stop_time_seconds;
+        }
+      }
 
       // Abort if timeline collision detected
       if (latestDbSeconds > lockedStartSeconds) {

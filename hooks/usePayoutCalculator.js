@@ -3,6 +3,7 @@ import useSWR from "swr";
 import { toast } from "sonner";
 import { supabase } from "@/utils/supabase";
 import { useAccount } from "@/context/AccountContext";
+import { useAdminStore } from "@/store/useAdminStore";
 import { timeToTotalSeconds, secondsToHHMMString, secondsToHHMMSSString, getCurrentCycleBoundaries } from "@/utils/timeUtils";
 
 export const preciseRound = (num) => {
@@ -79,8 +80,11 @@ export const fetchTeamData = async (accountId) => {
 };
 
 export function usePayoutCalculator({ session } = {}) {
-  const { activeAccount } = useAccount();
-  const poolLimitHours = activeAccount?.weekly_pool_hours || 60;
+  const { activeAccount: contextAccount } = useAccount();
+  const activeAccount = useAdminStore(state => 
+    state.workspaces.find(w => w.id === contextAccount?.id)
+  ) || contextAccount;
+  const poolLimitHours = activeAccount?.weekly_pool_hours ?? 0;
   const maxPoolSeconds = poolLimitHours * 3600;
 
   const [platformTimeInput, setPlatformTimeInput] = useState("");

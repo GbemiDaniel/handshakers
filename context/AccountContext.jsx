@@ -9,6 +9,9 @@ export const AccountContext = createContext({
   activeAccount: null,
   setActiveAccount: () => {},
   isSuperAdmin: false,
+  accounts: [],
+  isLoadingAccounts: false,
+  refreshAccounts: () => {},
 });
 
 export function AccountProvider({ children, session }) {
@@ -53,6 +56,27 @@ export function AccountProvider({ children, session }) {
 
   // Subscribe to Zustand store for workspaces
   const workspaces = useAdminStore((state) => state.workspaces);
+  const isLoadingAccounts = useAdminStore((state) => state.isLoadingWorkspaces);
+  const setWorkspaces = useAdminStore((state) => state.setWorkspaces);
+  const setIsLoadingAccounts = useAdminStore((state) => state.setIsLoadingWorkspaces);
+
+  const refreshAccounts = useCallback(async () => {
+    setIsLoadingAccounts(true);
+    try {
+      const { data, error } = await supabase.from("accounts").select("id, account_name, weekly_pool_hours, created_at");
+      if (error) throw error;
+      setWorkspaces(data || []);
+    } catch (err) {
+      console.error("Error fetching workspaces:", err);
+      setWorkspaces([]);
+    }
+  }, [setIsLoadingAccounts, setWorkspaces]);
+
+  useEffect(() => {
+    if (workspaces.length === 0) {
+      refreshAccounts();
+    }
+  }, [workspaces.length, refreshAccounts]);
 
   // Synchronize activeAccount with urlAccountId from URL parameters
   useEffect(() => {
@@ -71,6 +95,9 @@ export function AccountProvider({ children, session }) {
     activeAccount,
     setActiveAccount,
     isSuperAdmin,
+    accounts: workspaces,
+    isLoadingAccounts,
+    refreshAccounts,
   };
 
   return (

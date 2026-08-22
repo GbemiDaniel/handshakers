@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAccount } from "@/context/AccountContext";
 import WorkspaceManagerModal from "./WorkspaceManagerModal";
 import ManageTeamModal from "./ManageTeamModal";
-import { Plus, Users, LayoutDashboard } from "lucide-react";
+import { Plus, Users, LayoutDashboard, Calculator } from "lucide-react";
 import Logo from "./Logo";
 import ProfileSettings from "./ProfileSettings";
 import AccountSwitcher from "./AccountSwitcher";
@@ -65,6 +65,15 @@ export default function Header({ session, onSignOut }) {
               title="Global Dashboard"
             >
               <Logo className="w-[clamp(1.25rem,2.5vw,1.75rem)] h-[clamp(1.25rem,2.5vw,1.75rem)] group-hover:scale-105 transition-transform duration-200" showText={true} />
+            </Link>
+
+            <Link
+              href="/calculator"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              title="Interactive Payout Calculator"
+            >
+              <Calculator className="w-3.5 h-3.5 text-blue-500" />
+              <span>Payout Calculator</span>
             </Link>
           </div>
 
@@ -131,6 +140,15 @@ export default function Header({ session, onSignOut }) {
             <div className="flex flex-col px-0 py-6 gap-6">
               <AccountSwitcher isMobile={true} />
               
+              <Link
+                href="/calculator"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-4 w-full px-6 py-3 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors focus:outline-none"
+              >
+                <Calculator className="w-5 h-5 text-blue-500 shrink-0" />
+                <span>Payout Calculator</span>
+              </Link>
+
               <button
                 type="button"
                 onClick={() => {

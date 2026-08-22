@@ -5,14 +5,17 @@ import { usePayoutCalculator } from "@/hooks/usePayoutCalculator";
 import { Gauge, RefreshCw } from "lucide-react";
 import { secondsToSmartDisplay } from "@/utils/timeUtils";
 import { useAccount } from "@/context/AccountContext";
+import { useAdminStore } from "@/store/useAdminStore";
 
 export default function FuelGauge() {
   const [animatedPercent, setAnimatedPercent] = useState(0);
 
-  const { activeAccount } = useAccount();
+  const { activeAccount: contextAccount } = useAccount();
+  const activeAccount = useAdminStore(state => 
+    state.workspaces.find(w => w.id === contextAccount?.id)
+  ) || contextAccount;
 
-  // Safely fallback to 60
-  const poolLimitHours = activeAccount?.weekly_pool_hours || 60;
+  const poolLimitHours = activeAccount?.weekly_pool_hours ?? 0;
   const poolLimitSeconds = poolLimitHours * 3600;
 
   const { state, actions } = usePayoutCalculator({});
