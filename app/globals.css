@@ -51,6 +51,11 @@
   }
 
   /* Root canvas background & smooth theme transition */
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
+
   html, body {
     background-color: var(--bg-canvas);
     color: var(--text-primary);

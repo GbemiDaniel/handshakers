@@ -2,7 +2,11 @@
 
 import React from "react";
 
-export default function Logo({ className = "w-[clamp(1.25rem,2.5vw,1.75rem)] h-[clamp(1.25rem,2.5vw,1.75rem)]", showText = true }) {
+export default function Logo({ 
+  className = "w-[clamp(1.25rem,2.5vw,1.75rem)] h-[clamp(1.25rem,2.5vw,1.75rem)]", 
+  showText = true,
+  textClassName = "text-slate-900 dark:text-white"
+}) {
   return (
     <div className="flex items-center gap-0">
       <svg
@@ -21,7 +25,7 @@ export default function Logo({ className = "w-[clamp(1.25rem,2.5vw,1.75rem)] h-[
         <path d="M67 62l11-9.5c3.5-3 8-1.5 8 3.5v22c0 3.3-2.7 6-6 6H70c-3.3 0-6-2.7-6-6V62z" />
       </svg>
       {showText && (
-        <span className="font-bold tracking-tight text-[clamp(1.125rem,2vw,1.5rem)] text-slate-900 dark:text-white -ml-0.5">
+        <span className={`font-bold tracking-tight text-[clamp(1.125rem,2vw,1.5rem)] -ml-0.5 ${textClassName}`}>
           andshakers
         </span>
       )}

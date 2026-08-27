@@ -256,8 +256,9 @@ export function PrecisionChronometerToken({ className = "w-10 h-10 sm:w-12 sm:h-
         <circle cx="24" cy="26" r="2.5" fill="#ffffff" className="drop-shadow-[0_0_6px_#ffffff]" />
         {/* Static Hand */}
         <path d="M24 26L32 30" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" />
-        {/* Sweeping Hand */}
-        <motion.g style={{ transformOrigin: "24px 26px" }} animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }}>
+        {/* Sweeping Hand - using an invisible bounding circle to guarantee exact 24x26 origin across browsers */}
+        <motion.g animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} style={{ originX: 0.5, originY: 0.5 }}>
+          <circle cx="24" cy="26" r="16" fill="transparent" stroke="transparent" className="pointer-events-none" />
           <path d="M24 26V13" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" />
           <circle cx="24" cy="13" r="1.5" fill="#ffffff" />
         </motion.g>

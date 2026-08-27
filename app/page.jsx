@@ -24,7 +24,8 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import MarketingCalculator from "@/components/MarketingCalculator";
 import FourFeatureCardsGrid from "@/components/FeatureCards";
 import { TeamNodeToken, PrecisionChronometerToken, CyberGridIcon, PlayDemoBadge } from "@/components/GlowTokens";
-import { motion, useMotionValue, useTransform, useScroll, useMotionValueEvent } from "framer-motion";
+import Navbar from "@/components/Navbar";
+import { motion, useMotionValue, useTransform } from "framer-motion";
 import Link from "next/link";
 
 function TaskersToolbar({ searchQuery, setSearchQuery, filterStatus, setFilterStatus }) {
@@ -760,12 +761,6 @@ export default function Home() {
   // -------------------------------------------------------------
   const [hasFinePointer, setHasFinePointer] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  const { scrollY } = useScroll();
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    setIsScrolled(latest > 50);
-  });
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -831,27 +826,6 @@ export default function Home() {
     );
   }
 
-  const navbarVariants = {
-    top: {
-      backgroundColor: "rgba(3, 7, 18, 0)",
-      backdropFilter: "blur(0px)",
-      WebkitBackdropFilter: "blur(0px)",
-      borderBottomColor: "rgba(255, 255, 255, 0)",
-      boxShadow: "0 0 0 0 rgba(0, 0, 0, 0)",
-      paddingTop: "18px",
-      paddingBottom: "18px",
-    },
-    scrolled: {
-      backgroundColor: "rgba(3, 7, 18, 0.85)",
-      backdropFilter: "blur(16px)",
-      WebkitBackdropFilter: "blur(16px)",
-      borderBottomColor: "rgba(255, 255, 255, 0.08)",
-      boxShadow: "0 20px 40px -15px rgba(0, 0, 0, 0.7)",
-      paddingTop: "10px",
-      paddingBottom: "10px",
-    },
-  };
-
   // Unauthenticated View - Marketing Funnel
   if (!session) {
     return (
@@ -861,7 +835,7 @@ export default function Home() {
         {/* ------------------------------------------------------------- */}
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
           {/* Targeted Feathered Ambient Radial Glow — incredibly soft, from-blue-900/10 per art direction */}
-          <div className="absolute top-36 sm:top-48 left-1/2 -translate-x-1/2 w-[56rem] max-w-full h-[28rem] rounded-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-slate-950/0 to-transparent blur-3xl" />
+          <div className="absolute top-20 sm:top-28 left-1/2 -translate-x-1/2 w-[56rem] max-w-full h-[28rem] rounded-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-slate-950/0 to-transparent blur-3xl" />
 
           {/* Top-Left Volumetric Deep Primary Blue Atmosphere */}
           <motion.div
@@ -886,79 +860,18 @@ export default function Home() {
         </div>
 
         {/* ------------------------------------------------------------- */}
-        {/* Sleek Dynamic Glass Navigation Bar                            */}
+        {/* Dedicated Navbar Component                                    */}
         {/* ------------------------------------------------------------- */}
-        <motion.header
-          variants={navbarVariants}
-          initial="top"
-          animate={isScrolled ? "scrolled" : "top"}
-          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed top-0 inset-x-0 z-50 border-b border-transparent will-change-transform"
-        >
-          <div className="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between h-11 w-full">
-            <Link href="/" className="flex items-center gap-2.5 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg shrink-0">
-              <Logo className="w-7 h-7 group-hover:scale-105 transition-transform duration-200" showText={true} />
-            </Link>
-
-            {/* Center Desktop Navigation Links with Refined Tonal Hover */}
-            <nav aria-label="Main Navigation" className="hidden md:flex items-center gap-1 lg:gap-2 bg-white/[0.03] border border-white/[0.06] rounded-full px-2 py-1 backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
-              {[
-                { href: "#features", label: "Features" },
-                { href: "#engine", label: "Engine" },
-                { href: "#demo", label: "Demo" },
-                { href: "#mission-control", label: "Releases" },
-                { href: "#company", label: "Company" },
-              ].map((link) => (
-                <motion.a
-                  key={link.href}
-                  href={link.href}
-                  whileTap={{ scale: 0.96 }}
-                  className="px-3.5 py-1.5 rounded-full text-xs lg:text-sm font-medium text-slate-400 hover:text-white hover:bg-white/[0.06] transition-all duration-200 inline-block"
-                >
-                  {link.label}
-                </motion.a>
-              ))}
-            </nav>
-
-            {/* Right Action Items */}
-            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-              <ThemeToggle />
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.96 }}
-                type="button"
-                onClick={() => setShowAuthModal(true)}
-                className="text-xs sm:text-sm font-medium text-slate-300 hover:text-white px-3 sm:px-3.5 py-1.5 rounded-full hover:bg-white/[0.06] transition-all duration-200 cursor-pointer"
-              >
-                Sign In
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.03, boxShadow: "0 0 24px rgba(255,255,255,0.25)" }}
-                whileTap={{ scale: 0.97 }}
-                type="button"
-                onClick={() => setShowAuthModal(true)}
-                className="text-xs sm:text-sm font-semibold bg-white hover:bg-slate-100 text-slate-950 px-4 sm:px-5 py-2 rounded-full shadow-[0_0_18px_rgba(255,255,255,0.15)] transition-all duration-200 cursor-pointer flex items-center gap-1.5 overflow-hidden shrink-0"
-              >
-                <span>Try for free</span>
-              </motion.button>
-            </div>
-          </div>
-        </motion.header>
+        <Navbar onAuthModalOpen={() => setShowAuthModal(true)} />
 
         <main className="relative z-10 flex flex-col items-center w-full">
           {/* ========================================================= */}
           {/* SECTION 1: THE HERO (Image 1 & Image 2 Kinetic Typography) */}
-          {/* Clean single pt-[120px] clearing fixed header without gap */}
+          {/* Clean pt-24 clearing fixed header seamlessly without gap   */}
           {/* ========================================================= */}
-          <section className="relative w-full pt-32 lg:pt-40 pb-16 sm:pb-24 overflow-hidden">
+          <section className="relative w-full pt-20 sm:pt-24 lg:pt-28 pb-16 sm:pb-24 overflow-hidden">
             <div className="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col items-center text-center">
               <motion.div variants={heroContainerVariants} initial="hidden" animate="show" className="max-w-5xl mx-auto space-y-8 flex flex-col items-center">
-                <motion.div variants={heroItemVariants} className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/3 border border-white/8 text-slate-300 backdrop-blur-xl shadow-[0_0_20px_rgba(59,130,246,0.05)] overflow-hidden">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.6)]" />
-                  <span className="font-mono text-slate-400">v2.4 Released</span>
-                  <span className="text-white/20">|</span>
-                  <span>Purpose-Built for B2B & Modern Teams</span>
-                </motion.div>
 
                 <motion.h1
                   variants={heroItemVariants}
@@ -1003,7 +916,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.9, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full max-w-7xl mx-auto mt-16 sm:mt-24 grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-center"
+                className="w-full max-w-7xl mx-auto mt-12 sm:mt-16 grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-center"
               >
                 {/* CARD 1 (Left): Release Balance Precisely with Simple Rules */}
                 <motion.div
@@ -1031,16 +944,16 @@ export default function Home() {
                       { name: "Elena R.", tag: "#Design", hours: "18.00 hrs", billable: "14.40 hrs", pct: "90%" },
                       { name: "Devon K.", tag: "#FullStack", hours: "17.50 hrs", billable: "14.00 hrs", pct: "85%" },
                     ].map((tasker, idx) => (
-                      <div key={idx} className="p-2.5 rounded-xl bg-slate-950/60 border border-white/4 space-y-1.5 shadow-sm">
-                        <div className="flex items-center justify-between text-xs">
+                      <div key={idx} className="p-3.5 rounded-xl bg-slate-950/60 border border-white/4 space-y-2 shadow-sm">
+                        <div className="grid grid-cols-[1fr_auto] gap-4 items-baseline text-xs">
                           <span className="font-semibold text-white">{tasker.name}</span>
-                          <span className="font-mono text-cyan-300 font-medium">{tasker.billable}</span>
+                          <span className="font-mono text-cyan-300 font-medium text-right">{tasker.billable}</span>
                         </div>
-                        <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                        <div className="grid grid-cols-[1fr_auto] gap-4 items-baseline text-[10px] text-slate-500 font-mono">
                           <span>{tasker.tag}</span>
-                          <span>Logged: {tasker.hours}</span>
+                          <span className="text-right">Logged: {tasker.hours}</span>
                         </div>
-                        <div className="w-full h-1 rounded-full bg-white/4 overflow-hidden">
+                        <div className="w-full h-1 rounded-full bg-white/4 overflow-hidden mt-0.5">
                           <div className="h-full bg-linear-to-r from-blue-500 via-cyan-400 to-emerald-400 rounded-full" style={{ width: tasker.pct }} />
                         </div>
                       </div>
@@ -1156,30 +1069,66 @@ export default function Home() {
             </div>
           </section>
 
-          {/* ========================================================= */}
-          {/* SOCIAL PROOF RIBBON (Reference Image 1)                   */}
-          {/* ========================================================= */}
-          <motion.section
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="w-full py-12 border-y border-white/4 bg-[#030712]/50"
+          {/* Upgraded Humanized Value Pillars - Mobile Responsive Fixed */}
+          <motion.div
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-50px" }}
+            variants={{
+              hidden: { opacity: 0 },
+              show: { opacity: 1, transition: { staggerChildren: 0.15, delayChildren: 0.2 } }
+            }}
+            className="w-full max-w-6xl mx-auto py-24 sm:py-32 px-6 relative z-10"
           >
-            <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center space-y-6">
-              <p className="text-xs font-mono uppercase tracking-widest text-slate-500">
-                Trusted by high-velocity agencies and engineering teams
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-16 opacity-60 grayscale hover:grayscale-0 transition-all duration-300">
-                <span className="font-bold text-lg sm:text-xl tracking-tighter text-white font-mono">STRIPE</span>
-                <span className="font-bold text-lg sm:text-xl tracking-tighter text-white font-mono">LINEAR</span>
-                <span className="font-bold text-lg sm:text-xl tracking-tighter text-white font-mono">SUPABASE</span>
-                <span className="font-bold text-lg sm:text-xl tracking-tighter text-white font-mono">VERCEL</span>
-                <span className="font-bold text-lg sm:text-xl tracking-tighter text-white font-mono">FRAMER</span>
-                <span className="font-bold text-lg sm:text-xl tracking-tighter text-white font-mono">RAYCAST</span>
-              </div>
+            <div className="flex flex-col md:flex-row items-stretch border-y md:border-y-0 border-white/[0.05] md:border-transparent">
+              
+              {/* Pillar 1: Automated Payouts */}
+              <motion.div 
+                variants={{ hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } } }}
+                className="group relative flex flex-col items-start text-left flex-1 border-b md:border-b-0 md:border-r border-white/[0.05] py-8 md:py-4 md:px-8 lg:px-12 md:pl-0 overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-b from-blue-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                
+                <h3 className="text-base sm:text-lg md:text-xl font-medium text-slate-300 group-hover:text-white transition-colors duration-300 tracking-wide mb-2">
+                  Automated Team Payouts
+                </h3>
+                <p className="text-sm sm:text-base text-slate-500 group-hover:text-slate-400 transition-colors duration-300 font-light leading-relaxed">
+                  Set a client budget and let Handshakers calculate everyone's fair share instantly. No more end-of-week spreadsheet math.
+                </p>
+              </motion.div>
+
+              {/* Pillar 2: Trust & Autonomy */}
+              <motion.div 
+                variants={{ hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } } }}
+                className="group relative flex flex-col items-start text-left flex-1 border-b md:border-b-0 md:border-r border-white/[0.05] py-8 md:py-4 md:px-8 lg:px-12 overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-b from-cyan-400/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                
+                <h3 className="text-base sm:text-lg md:text-xl font-medium text-slate-300 group-hover:text-white transition-colors duration-300 tracking-wide mb-2">
+                  Independent Time Tracking
+                </h3>
+                <p className="text-sm sm:text-base text-slate-500 group-hover:text-slate-400 transition-colors duration-300 font-light leading-relaxed">
+                  Log your work without invasive screen recorders or spyware. We believe in trusting professionals to do their jobs.
+                </p>
+              </motion.div>
+
+              {/* Pillar 3: Transparency */}
+              <motion.div 
+                variants={{ hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } } }}
+                className="group relative flex flex-col items-start text-left flex-1 py-8 md:py-4 md:px-8 lg:px-12 md:pr-0 overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                
+                <h3 className="text-base sm:text-lg md:text-xl font-medium text-slate-300 group-hover:text-white transition-colors duration-300 tracking-wide mb-2">
+                  Real-Time Transparency
+                </h3>
+                <p className="text-sm sm:text-base text-slate-500 group-hover:text-slate-400 transition-colors duration-300 font-light leading-relaxed">
+                  Everyone on the team can see the budget, the progress, and their exact earnings. No hidden numbers, just absolute clarity.
+                </p>
+              </motion.div>
+
             </div>
-          </motion.section>
+          </motion.div>
 
           {/* ========================================================= */}
           {/* SECTION 2: THE 2-COLUMN MODULE (Reference Image 1)        */}
@@ -1190,7 +1139,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="w-full py-24 sm:py-32"
+            className="w-full py-24 sm:py-32 scroll-mt-20"
           >
             <div className="max-w-7xl mx-auto px-6 lg:px-8 space-y-16">
               {/* Section Header with Accent Gradient Eyebrow Line */}
@@ -1275,7 +1224,7 @@ export default function Home() {
           {/* ========================================================= */}
           {/* SECTION 3: FOUR-COLUMN FEATURE GRID (Reference Image 1 & 2) */}
           {/* ========================================================= */}
-          <div id="engine" className="w-full border-t border-white/4">
+          <div id="engine" className="w-full border-t border-white/4 scroll-mt-20">
             <FourFeatureCardsGrid />
           </div>
 
@@ -1283,12 +1232,12 @@ export default function Home() {
           {/* SECTION 4: MISSION CONTROL CONSOLE (Reference Image 1)    */}
           {/* ========================================================= */}
           <motion.section
-            id="mission-control"
+            id="releases"
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="w-full py-24 sm:py-32 border-t border-white/4"
+            className="w-full py-24 sm:py-32 border-t border-white/4 scroll-mt-20"
           >
             <div className="max-w-7xl mx-auto px-6 lg:px-8 space-y-16">
               <div className="space-y-4 text-left">
@@ -1305,9 +1254,9 @@ export default function Home() {
                   transition={{ duration: 0.2 }}
                   className="lg:col-span-8 rounded-3xl bg-[#090d16] border border-white/8 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.6)] space-y-6 overflow-hidden transition-colors duration-200 cursor-pointer"
                 >
-                  <div className="flex items-center justify-between pb-4 border-b border-white/6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-white/6 gap-2 sm:gap-0">
                     <div className="flex items-center gap-2 font-mono text-xs text-slate-300">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0" />
                       <span>RELEASE PAYOUTS v2</span>
                     </div>
                     <span className="text-xs font-mono text-slate-400">Total Pool: 40.00 hrs</span>
@@ -1320,15 +1269,15 @@ export default function Home() {
                       { name: "UI Design Sprint", status: "Audited", weight: "40.0%", release: "Just now", color: "bg-purple-400" },
                       { name: "GraphQL Gateway", status: "Pending", weight: "0.0%", release: "In queue", color: "bg-amber-400" },
                     ].map((row, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/2 border border-white/4">
+                      <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-3 rounded-xl bg-white/2 border border-white/4 gap-3 sm:gap-0">
                         <div className="flex items-center gap-3">
-                          <span className={`w-2 h-2 rounded-full ${row.color}`} />
-                          <span className="font-sans font-medium text-white text-sm">{row.name}</span>
+                          <span className={`w-2 h-2 shrink-0 rounded-full ${row.color}`} />
+                          <span className="font-sans font-medium text-white text-sm truncate">{row.name}</span>
                         </div>
-                        <div className="flex items-center gap-6 text-slate-400">
+                        <div className="flex items-center justify-between w-full sm:w-auto gap-4 sm:gap-6 text-slate-400">
                           <span className="text-slate-300">{row.status}</span>
-                          <span className="font-bold text-white">{row.weight}</span>
-                          <span className="text-[11px] text-slate-500">{row.release}</span>
+                          <span className="font-bold text-white tabular-nums">{row.weight}</span>
+                          <span className="text-[11px] text-slate-500 whitespace-nowrap">{row.release}</span>
                         </div>
                       </div>
                     ))}
@@ -1494,7 +1443,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="w-full py-24 sm:py-32 border-t border-white/4"
+            className="w-full py-24 sm:py-32 border-t border-white/4 scroll-mt-20"
           >
             <div className="max-w-7xl mx-auto px-6 lg:px-8 space-y-12 sm:space-y-16">
               <div className="text-center max-w-3xl mx-auto space-y-4">
@@ -1557,7 +1506,7 @@ export default function Home() {
         </main>
 
         {/* Global Clean Footer (Reference Image 1) */}
-        <footer className="w-full py-8 text-center text-slate-500 text-xs sm:text-sm border-t border-white/4 bg-[#030712]">
+        <footer id="company" className="w-full pt-8 pb-28 sm:pb-32 text-center text-slate-500 text-xs sm:text-sm border-t border-white/4 bg-[#030712] scroll-mt-20">
           <div className="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Logo className="w-5 h-5" showText={true} />
