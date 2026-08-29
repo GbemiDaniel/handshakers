@@ -2,7 +2,7 @@
 
 import { SWRConfig } from "swr";
 import { Toaster } from "sonner";
-import { ThemeProvider } from "@/context/ThemeContext";
+import { ThemeProvider } from "next-themes";
 
 /**
  * Global SWR and Theme configuration provider.
@@ -19,7 +19,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
  */
 export default function Providers({ children }) {
   return (
-    <ThemeProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <SWRConfig
         value={{
           dedupingInterval: 0,

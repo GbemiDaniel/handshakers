@@ -7,6 +7,7 @@ import WorkspaceManagerModal from "./WorkspaceManagerModal";
 import ManageTeamModal from "./ManageTeamModal";
 import { Building, ChevronDown, Check, Loader2, Sparkles, Plus, Users, LayoutDashboard, Folder } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import TelemetrySync from "@/components/TelemetrySync";
 
 export default function AccountSwitcher({ isMobile = false }) {
   const router = useRouter();
@@ -38,7 +39,7 @@ export default function AccountSwitcher({ isMobile = false }) {
   if (isLoadingAccounts) {
     return (
       <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 rounded-xl text-xs font-medium text-slate-400">
-        <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600 dark:text-blue-400" />
+        <TelemetrySync />
         <span>Loading account...</span>
       </div>
     );

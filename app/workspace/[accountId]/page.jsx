@@ -12,6 +12,7 @@ import { AccountProvider } from "@/context/AccountContext";
 import { supabase } from "@/utils/supabase";
 import { Sparkles, Loader2, Clock, Calculator } from "lucide-react";
 import Logo from "@/components/Logo";
+import AppBootSequence from "@/components/AppBootSequence";
 
 export default function WorkspacePage() {
   const params = useParams();
@@ -53,14 +54,7 @@ export default function WorkspacePage() {
 
   // Brief clean loading state while verifying initial auth session
   if (loading) {
-    return (
-      <main className="min-h-screen bg-slate-50 dark:bg-[#0B0F19] flex items-center justify-center">
-        <div className="flex items-center gap-3 bg-white dark:bg-slate-900 px-5 py-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-          <Loader2 className="w-5 h-5 animate-spin text-blue-600 dark:text-blue-400" />
-          <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Verifying session...</span>
-        </div>
-      </main>
-    );
+    return <AppBootSequence/>;
   }
 
   // Unauthenticated View: Render Auth.jsx centered on screen

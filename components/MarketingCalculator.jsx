@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Timer,
 } from "lucide-react";
+import TelemetrySync from "@/components/TelemetrySync";
 
 /**
  * Universal Time Input Parser
@@ -280,6 +281,7 @@ export default function MarketingCalculator({ onCtaClick }) {
                   <span className="text-xs text-blue-400/90 font-mono">Final cut</span>
                 </div>
                 <div className="flex flex-col pt-1">
+                  {/* TODO: Hook up isCalculating state from backend to conditionally render <TelemetrySync /> here */}
                   {isZeroState ? (
                     <div className="text-3xl font-extrabold font-mono text-slate-600 tabular-nums tracking-tight">
                       00:00

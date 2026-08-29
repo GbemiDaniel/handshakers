@@ -6,6 +6,7 @@ import { supabase } from "@/utils/supabase";
 import { useAccount } from "@/context/AccountContext";
 import { Calendar, RefreshCw, ChevronRight, ChevronDown, Clock, User } from "lucide-react";
 import { secondsToSmartDisplay, secondsToHHMMSSString } from "@/utils/timeUtils";
+import TelemetrySync from "@/components/TelemetrySync";
 
 /**
  * Formats ISO timestamp into a full Anchor Date string:
@@ -205,7 +206,7 @@ export default function DailyLogs({ session, refreshKey }) {
       {/* Accordion Grouped Shifts List */}
       {isLoading ? (
         <div className="p-6 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl border border-slate-200/60 dark:border-slate-700/60 text-center text-xs text-slate-400 dark:text-slate-500 animate-pulse flex items-center justify-center gap-2">
-          <RefreshCw className="w-4 h-4 animate-spin text-blue-600 dark:text-blue-400" />
+          <TelemetrySync />
           <span>Loading shared relay timeline...</span>
         </div>
       ) : groupedShifts.length === 0 ? (

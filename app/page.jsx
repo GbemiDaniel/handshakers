@@ -22,6 +22,8 @@ import { useAdminStore } from "@/store/useAdminStore";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import MarketingCalculator from "@/components/MarketingCalculator";
+import TelemetrySync from "@/components/TelemetrySync";
+import AppBootSequence from "@/components/AppBootSequence";
 import FourFeatureCardsGrid from "@/components/FeatureCards";
 import { TeamNodeToken, PrecisionChronometerToken, CyberGridIcon, PlayDemoBadge } from "@/components/GlowTokens";
 import Navbar from "@/components/Navbar";
@@ -816,14 +818,7 @@ export default function Home() {
   }, [hasFinePointer, handlePointerMove]);
 
   if (loading) {
-    return (
-      <main className="min-h-screen bg-slate-50 dark:bg-[#0b0f19] flex items-center justify-center">
-        <div className="flex items-center gap-3 bg-white dark:bg-slate-900 px-5 py-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
-          <Loader2 className="w-5 h-5 animate-spin text-blue-600 dark:text-blue-400" />
-          <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Loading OS...</span>
-        </div>
-      </main>
-    );
+    return <AppBootSequence/>;
   }
 
   // Unauthenticated View - Marketing Funnel
@@ -922,7 +917,7 @@ export default function Home() {
                 <motion.div
                   whileHover={{ y: -5, scale: 1.01, backgroundColor: "rgba(255,255,255,0.04)" }}
                   transition={{ duration: 0.2 }}
-                  className="relative rounded-[28px] bg-linear-to-b from-[#0a1220]/80 via-[#060a12]/90 to-[#03060a]/95 border border-white/8 hover:border-blue-500/30 backdrop-blur-2xl p-6 text-left shadow-[0_20px_50px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.08)] overflow-hidden space-y-5 transition-colors duration-200 group cursor-pointer"
+                  className="relative rounded-[28px] bg-linear-to-b from-[#0a1220]/80 via-[#060a12]/90 to-[#03060a]/95 border border-white/8 hover:border-blue-500/30 backdrop-blur-2xl transform-gpu will-change-transform p-6 text-left shadow-[0_20px_50px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.08)] overflow-hidden space-y-5 transition-colors duration-200 group cursor-pointer"
                 >
                   <div className="absolute -top-16 inset-x-0 h-32 bg-blue-500/10 rounded-full blur-3xl opacity-30 group-hover:opacity-60 transition-opacity pointer-events-none" />
 
@@ -974,7 +969,7 @@ export default function Home() {
                 <motion.div
                   whileHover={{ y: -5, scale: 1.01, backgroundColor: "rgba(255,255,255,0.04)" }}
                   transition={{ duration: 0.2 }}
-                  className="relative rounded-[28px] bg-linear-to-b from-[#0c182c]/90 via-[#070f1e]/95 to-[#03060a]/95 border border-blue-500/40 hover:border-cyan-400/50 backdrop-blur-2xl p-7 sm:p-8 text-left shadow-[0_25px_60px_-10px_rgba(37,99,235,0.25),inset_0_1px_1px_rgba(255,255,255,0.15)] overflow-hidden space-y-6 lg:-translate-y-4 scale-100 sm:scale-105 z-20 transition-colors duration-200 group cursor-pointer"
+                  className="relative rounded-[28px] bg-linear-to-b from-[#0c182c]/90 via-[#070f1e]/95 to-[#03060a]/95 border border-blue-500/40 hover:border-cyan-400/50 backdrop-blur-2xl transform-gpu will-change-transform p-7 sm:p-8 text-left shadow-[0_25px_60px_-10px_rgba(37,99,235,0.25),inset_0_1px_1px_rgba(255,255,255,0.15)] overflow-hidden space-y-6 lg:-translate-y-4 scale-100 sm:scale-105 z-20 transition-colors duration-200 group cursor-pointer"
                 >
                   <div className="absolute top-0 right-0 w-36 h-36 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
 
@@ -1014,7 +1009,7 @@ export default function Home() {
                 <motion.div
                   whileHover={{ y: -5, scale: 1.01, backgroundColor: "rgba(255,255,255,0.04)" }}
                   transition={{ duration: 0.2 }}
-                  className="relative rounded-[28px] bg-linear-to-b from-[#0a1220]/80 via-[#060a12]/90 to-[#03060a]/95 border border-white/8 hover:border-cyan-500/30 backdrop-blur-2xl p-6 text-left shadow-[0_20px_50px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.08)] overflow-hidden space-y-5 transition-colors duration-200 group cursor-pointer"
+                  className="relative rounded-[28px] bg-linear-to-b from-[#0a1220]/80 via-[#060a12]/90 to-[#03060a]/95 border border-white/8 hover:border-cyan-500/30 backdrop-blur-2xl transform-gpu will-change-transform p-6 text-left shadow-[0_20px_50px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.08)] overflow-hidden space-y-5 transition-colors duration-200 group cursor-pointer"
                 >
                   <div className="absolute -top-16 inset-x-0 h-32 bg-cyan-500/10 rounded-full blur-3xl opacity-30 group-hover:opacity-60 transition-opacity pointer-events-none" />
 
@@ -1073,7 +1068,7 @@ export default function Home() {
           <motion.div
             initial="hidden"
             whileInView="show"
-            viewport={{ once: true, margin: "-50px" }}
+            viewport={{ once: true, margin: "0px 0px -50px 0px" }}
             variants={{
               hidden: { opacity: 0 },
               show: { opacity: 1, transition: { staggerChildren: 0.15, delayChildren: 0.2 } }
@@ -1137,7 +1132,7 @@ export default function Home() {
             id="features"
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
+            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="w-full py-24 sm:py-32 scroll-mt-20"
           >
@@ -1176,7 +1171,7 @@ export default function Home() {
                 <motion.div
                   whileHover={{ y: -5, scale: 1.01, backgroundColor: "rgba(255,255,255,0.04)" }}
                   transition={{ duration: 0.2 }}
-                  className="lg:col-span-7 rounded-3xl bg-[#090d16] border border-white/8 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.6)] space-y-6 overflow-hidden transition-colors duration-200 cursor-pointer"
+                  className="lg:col-span-7 rounded-3xl bg-[#090d16] border border-white/8 backdrop-blur-2xl transform-gpu will-change-transform p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.6)] space-y-6 overflow-hidden transition-colors duration-200 cursor-pointer"
                 >
                   {/* Console Filter Pills */}
                   <div className="flex flex-wrap items-center gap-2 pb-4 border-b border-white/6">
@@ -1235,7 +1230,7 @@ export default function Home() {
             id="releases"
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
+            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="w-full py-24 sm:py-32 border-t border-white/4 scroll-mt-20"
           >
@@ -1252,7 +1247,7 @@ export default function Home() {
                 <motion.div
                   whileHover={{ y: -5, scale: 1.01, backgroundColor: "rgba(255,255,255,0.04)" }}
                   transition={{ duration: 0.2 }}
-                  className="lg:col-span-8 rounded-3xl bg-[#090d16] border border-white/8 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.6)] space-y-6 overflow-hidden transition-colors duration-200 cursor-pointer"
+                  className="lg:col-span-8 rounded-3xl bg-[#090d16] border border-white/8 backdrop-blur-2xl transform-gpu will-change-transform p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.6)] space-y-6 overflow-hidden transition-colors duration-200 cursor-pointer"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-white/6 gap-2 sm:gap-0">
                     <div className="flex items-center gap-2 font-mono text-xs text-slate-300">
@@ -1277,7 +1272,13 @@ export default function Home() {
                         <div className="flex items-center justify-between w-full sm:w-auto gap-4 sm:gap-6 text-slate-400">
                           <span className="text-slate-300">{row.status}</span>
                           <span className="font-bold text-white tabular-nums">{row.weight}</span>
-                          <span className="text-[11px] text-slate-500 whitespace-nowrap">{row.release}</span>
+                          {row.release === "In queue" ? (
+                            <div className="w-16 flex justify-end">
+                              <TelemetrySync />
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-slate-500 whitespace-nowrap">{row.release}</span>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1315,7 +1316,7 @@ export default function Home() {
           <motion.section
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
+            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="w-full py-24 sm:py-32 border-t border-white/4"
           >
@@ -1332,7 +1333,7 @@ export default function Home() {
                 <motion.div
                   whileHover={{ y: -5, scale: 1.01, backgroundColor: "rgba(255,255,255,0.04)" }}
                   transition={{ duration: 0.2 }}
-                  className="p-8 rounded-3xl bg-[#090d16]/80 border border-white/6 backdrop-blur-2xl space-y-6 shadow-[0_15px_40px_rgba(0,0,0,0.4)] overflow-hidden transition-colors duration-200 cursor-pointer"
+                  className="p-8 rounded-3xl bg-[#090d16]/80 border border-white/6 backdrop-blur-2xl transform-gpu will-change-transform space-y-6 shadow-[0_15px_40px_rgba(0,0,0,0.4)] overflow-hidden transition-colors duration-200 cursor-pointer"
                 >
                   <div className="space-y-2">
                     <h3 className="text-xl font-bold tracking-tight text-white">
@@ -1357,7 +1358,7 @@ export default function Home() {
                 <motion.div
                   whileHover={{ y: -5, scale: 1.01, backgroundColor: "rgba(255,255,255,0.04)" }}
                   transition={{ duration: 0.2 }}
-                  className="p-8 rounded-3xl bg-[#090d16]/80 border border-white/6 backdrop-blur-2xl space-y-6 shadow-[0_15px_40px_rgba(0,0,0,0.4)] overflow-hidden transition-colors duration-200 cursor-pointer"
+                  className="p-8 rounded-3xl bg-[#090d16]/80 border border-white/6 backdrop-blur-2xl transform-gpu will-change-transform space-y-6 shadow-[0_15px_40px_rgba(0,0,0,0.4)] overflow-hidden transition-colors duration-200 cursor-pointer"
                 >
                   <div className="space-y-2">
                     <h3 className="text-xl font-bold tracking-tight text-white">
@@ -1383,7 +1384,7 @@ export default function Home() {
                 <motion.div
                   whileHover={{ y: -5, scale: 1.01, backgroundColor: "rgba(255,255,255,0.04)" }}
                   transition={{ duration: 0.2 }}
-                  className="p-8 rounded-3xl bg-[#090d16]/80 border border-white/6 backdrop-blur-2xl space-y-6 shadow-[0_15px_40px_rgba(0,0,0,0.4)] overflow-hidden transition-colors duration-200 cursor-pointer"
+                  className="p-8 rounded-3xl bg-[#090d16]/80 border border-white/6 backdrop-blur-2xl transform-gpu will-change-transform space-y-6 shadow-[0_15px_40px_rgba(0,0,0,0.4)] overflow-hidden transition-colors duration-200 cursor-pointer"
                 >
                   <div className="space-y-2">
                     <h3 className="text-xl font-bold tracking-tight text-white">
@@ -1414,7 +1415,7 @@ export default function Home() {
           <motion.section
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
+            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             className="w-full py-24 sm:py-32 border-t border-white/4"
           >
@@ -1441,7 +1442,7 @@ export default function Home() {
             id="demo"
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
+            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="w-full py-24 sm:py-32 border-t border-white/4 scroll-mt-20"
           >
@@ -1470,7 +1471,7 @@ export default function Home() {
           <motion.section
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
+            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="w-full py-24 sm:py-32 border-t border-white/4"
           >
@@ -1478,7 +1479,7 @@ export default function Home() {
               <motion.div
                 whileHover={{ y: -5, scale: 1.01 }}
                 transition={{ duration: 0.2 }}
-                className="w-full max-w-4xl relative rounded-3xl bg-linear-to-b from-[#0e1424] via-[#090d16] to-[#05070c] border border-blue-500/30 backdrop-blur-2xl p-10 sm:p-16 text-center space-y-8 overflow-hidden shadow-[0_25px_60px_-15px_rgba(37,99,235,0.3)]"
+                className="w-full max-w-4xl relative rounded-3xl bg-linear-to-b from-[#0e1424] via-[#090d16] to-[#05070c] border border-blue-500/30 backdrop-blur-2xl transform-gpu will-change-transform p-10 sm:p-16 text-center space-y-8 overflow-hidden shadow-[0_25px_60px_-15px_rgba(37,99,235,0.3)]"
               >
                 <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-blue-500/20 blur-3xl pointer-events-none" />
                 <div className="relative z-10 space-y-4 max-w-2xl mx-auto">
@@ -1539,7 +1540,7 @@ export default function Home() {
         {/* Glassmorphic Auth Modal Overlay */}
         {showAuthModal && (
           <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-200">
-            <div className="relative w-full max-w-md bg-slate-900/95 rounded-3xl shadow-2xl border border-white/8 p-6 sm:p-8 overflow-hidden backdrop-blur-2xl animate-in zoom-in-95 duration-200">
+            <div className="relative w-full max-w-md bg-slate-900/95 rounded-3xl shadow-2xl border border-white/8 p-6 sm:p-8 overflow-hidden backdrop-blur-2xl transform-gpu will-change-transform animate-in zoom-in-95 duration-200">
               <button
                 onClick={() => setShowAuthModal(false)}
                 className="absolute top-5 right-5 p-2 text-slate-400 hover:text-white rounded-full hover:bg-white/6 transition-colors cursor-pointer"

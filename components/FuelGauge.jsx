@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import BaseCard from "./BaseCard";
+import TelemetrySync from "@/components/TelemetrySync";
 import { usePayoutCalculator } from "@/hooks/usePayoutCalculator";
 import { Gauge, RefreshCw } from "lucide-react";
 import { secondsToSmartDisplay } from "@/utils/timeUtils";
@@ -71,7 +73,7 @@ export default function FuelGauge() {
             className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors duration-150 ease-in-out p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 ml-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             title="Refresh Pool Meter"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${fetching ? "animate-spin" : ""}`} />
+            {fetching ? <TelemetrySync /> : <RefreshCw className="w-3.5 h-3.5" />}
           </button>
         </div>
 

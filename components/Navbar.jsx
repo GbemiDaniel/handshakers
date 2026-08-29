@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 import Logo from "@/components/Logo";
-import ThemeToggle from "@/components/ThemeToggle";
 
 const navbarVariants = {
   top: {
@@ -35,28 +34,25 @@ export default function Navbar({ onAuthModalOpen }) {
     setIsScrolled(latest > 40);
   });
 
-  // Active section scroll-spy
+  // Active section scroll-spy via IntersectionObserver
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY + 220;
-      for (let i = navLinks.length - 1; i >= 0; i--) {
-        const section = document.getElementById(navLinks[i].id);
-        if (section) {
-          const top = section.offsetTop;
-          if (scrollPosition >= top) {
-            setActiveNav(navLinks[i].href);
-            return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveNav(`#${entry.target.id}`);
           }
-        }
-      }
-      if (window.scrollY < 200) {
-        setActiveNav("");
-      }
-    };
+        });
+      },
+      { rootMargin: "-20% 0px -80% 0px" } // Triggers when section is near top of viewport
+    );
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
+    navLinks.forEach((link) => {
+      const el = document.getElementById(link.id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
   }, []);
 
   const handleNavClick = (e, link) => {
@@ -176,7 +172,6 @@ export default function Navbar({ onAuthModalOpen }) {
 
         {/* Right: Action Items */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <ThemeToggle />
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.96 }}

@@ -2,6 +2,7 @@
 import React from "react";
 import { toast } from "sonner";
 import BaseCard from "./BaseCard";
+import TelemetrySync from "@/components/TelemetrySync";
 import TimelineVisualizer from "./TimelineVisualizer";
 import { Calculator, Clock, Lock, RefreshCw, Users, User, Copy, CalendarDays, CheckCircle2 } from "lucide-react";
 import {
@@ -87,7 +88,7 @@ export default function PayoutCalculator({ session }) {
             className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-100 disabled:opacity-50"
             title="Sync Latest Database Logs"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+            {isLoading ? <TelemetrySync /> : <RefreshCw className="w-4 h-4" />}
           </button>
         }
       >

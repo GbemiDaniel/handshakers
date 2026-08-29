@@ -42,26 +42,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var stored = localStorage.getItem('handshakers-theme');
-                  var theme = stored || 'system';
-                  var isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                  if (isDark) {
-                    document.documentElement.classList.add('dark');
-                  } else {
-                    document.documentElement.classList.remove('dark');
-                  }
-                } catch (e) {}
-              })();
-            `,
-          }}
-        />
-      </head>
+      <head />
       <body className="min-h-full font-sans flex flex-col selection:bg-blue-100 selection:text-blue-900 dark:selection:bg-blue-900/80 dark:selection:text-blue-200 transition-colors duration-200 ease-in-out dark:bg-[#0B0F19] dark:text-slate-200" suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>

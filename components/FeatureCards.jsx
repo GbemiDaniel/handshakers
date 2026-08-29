@@ -234,7 +234,7 @@ function InteractiveTiltCard({ card, idx, hasFinePointer }) {
       ref={cardRef}
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
+      viewport={{ once: true, margin: "0px 0px -80px 0px" }}
       transition={{ duration: 0.6, delay: idx * 0.08, ease: [0.16, 1, 0.3, 1] }}
       whileHover={{ y: -5, scale: 1.01, backgroundColor: "rgba(255,255,255,0.04)" }}
       onPointerMove={hasFinePointer ? handlePointerMove : undefined}
@@ -250,7 +250,7 @@ function InteractiveTiltCard({ card, idx, hasFinePointer }) {
             }
           : undefined
       }
-      className="group relative rounded-[28px] bg-linear-to-b from-[#0a1220]/80 via-[#060a12]/90 to-[#03060a]/95 border border-white/8 hover:border-blue-500/30 p-5 sm:p-6 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.08)] transition-all duration-200 flex flex-col justify-between overflow-hidden will-change-transform cursor-pointer"
+      className="group relative rounded-[28px] bg-linear-to-b from-[#0a1220]/80 via-[#060a12]/90 to-[#03060a]/95 border border-white/8 hover:border-blue-500/30 p-5 sm:p-6 backdrop-blur-2xl transform-gpu will-change-transform shadow-[0_20px_50px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.08)] transition-all duration-200 flex flex-col justify-between overflow-hidden will-change-transform cursor-pointer"
     >
       {/* Top Inner Luminous Blue / Cyan Glow */}
       <div className="absolute -top-16 inset-x-0 h-32 bg-blue-500/10 rounded-full blur-3xl opacity-30 group-hover:opacity-70 transition-opacity pointer-events-none" />
@@ -328,7 +328,7 @@ export default function FourFeatureCardsGrid() {
     <motion.section
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-100px" }}
+      viewport={{ once: true, margin: "0px 0px -100px 0px" }}
       transition={{ duration: 0.6, ease: "easeOut" }}
       className="w-full py-24 sm:py-32 relative z-10"
     >
