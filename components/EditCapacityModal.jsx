@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { X, Loader2 } from "lucide-react";
 import { supabase } from "@/utils/supabase";
 import { toast } from "sonner";
 import { useAdminStore } from "@/store/useAdminStore";
 
 export default function EditCapacityModal({ isOpen, onClose, workspace }) {
+  const router = useRouter();
   const [poolLimit, setPoolLimit] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -31,10 +33,12 @@ export default function EditCapacityModal({ isOpen, onClose, workspace }) {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('accounts')
         .update({ weekly_pool_hours: parsedLimit })
-        .eq('id', workspace.id);
+        .eq('id', workspace.id)
+        .select('id')
+        .single();
 
       if (error) throw error;
 
@@ -44,9 +48,11 @@ export default function EditCapacityModal({ isOpen, onClose, workspace }) {
       useAdminStore.getState().updateWorkspaceOptimistic(workspace.id, { weekly_pool_hours: parsedLimit });
       
       onClose();
+      router.refresh();
     } catch (error) {
-      console.error("Error updating workspace capacity:", error);
-      toast.error(error.message || "Failed to update capacity");
+      console.error("Mutation Error:", error);
+      toast.error("Failed to update capacity. Check your permissions.");
+      return;
     } finally {
       setIsLoading(false);
     }

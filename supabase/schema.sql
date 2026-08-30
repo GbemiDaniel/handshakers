@@ -25,11 +25,9 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 CREATE TABLE IF NOT EXISTS public.time_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  start_minutes INTEGER NOT NULL,
-  stop_minutes INTEGER NOT NULL,
-  -- Phase 2: Canonical seconds columns (nullable during transition)
-  start_time_seconds INTEGER NULL,
-  stop_time_seconds INTEGER NULL,
+  account_id TEXT NOT NULL,
+  start_time_seconds INTEGER NOT NULL,
+  stop_time_seconds INTEGER NOT NULL,
   is_end_of_day BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
