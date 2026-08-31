@@ -112,10 +112,8 @@ export default function TaskLogger({ session, onUpdate }) {
   const calculateProjectedStop = (startSeconds, addedSeconds) => {
     const projectedStopSeconds = startSeconds + addedSeconds;
 
-    // Handle 24-hour rollover (86400 seconds per day)
-    const wrappedSeconds = ((projectedStopSeconds % 86400) + 86400) % 86400;
-
-    return secondsToSmartDisplay(wrappedSeconds);
+    // Removed 24-hour (86400) modulo to support absolute cumulative sprint hours
+    return secondsToSmartDisplay(projectedStopSeconds);
   };
 
   const projectedStopTime = calculateProjectedStop(lockedStartSeconds, totalSeconds);
