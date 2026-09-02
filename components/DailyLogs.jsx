@@ -8,6 +8,23 @@ import { Calendar, RefreshCw, ChevronRight, ChevronDown, Clock, User } from "luc
 import { secondsToSmartDisplay, secondsToHHMMSSString } from "@/utils/timeUtils";
 import TelemetrySync from "@/components/TelemetrySync";
 
+const getWeekBoundaries = () => {
+  const now = new Date();
+  const startOfCurrentWeek = new Date(now);
+  
+  const day = startOfCurrentWeek.getUTCDay();
+  // Calculate difference to last Monday
+  const diff = startOfCurrentWeek.getUTCDate() - day + (day === 0 ? -6 : 1);
+  
+  startOfCurrentWeek.setUTCDate(diff);
+  startOfCurrentWeek.setUTCHours(0, 0, 0, 0);
+
+  const startOfLastWeek = new Date(startOfCurrentWeek);
+  startOfLastWeek.setUTCDate(startOfLastWeek.getUTCDate() - 7);
+
+  return { startOfCurrentWeek, startOfLastWeek };
+};
+
 /**
  * Formats ISO timestamp into a full Anchor Date string:
  * "Today", "Yesterday", or "Tuesday, Jul 28"
@@ -156,6 +173,115 @@ export default function DailyLogs({ session, refreshKey }) {
     return [...shifts].reverse();
   }, [data, currentUserId]);
 
+  const categorizedShifts = React.useMemo(() => {
+    const { startOfCurrentWeek, startOfLastWeek } = getWeekBoundaries();
+    const currentWeekTime = startOfCurrentWeek.getTime();
+    const lastWeekTime = startOfLastWeek.getTime();
+
+    return groupedShifts.reduce(
+      (acc, shift) => {
+        // Grab the timestamp of the first session in the shift
+        const firstSession = shift.sessions[0];
+
+        // Fallback through possible timestamp keys (Supabase default vs camelCase vs custom)
+        const rawDate = firstSession?.created_at || firstSession?.createdAt || firstSession?.timestamp || firstSession?.startTime;
+
+        const shiftTime = rawDate ? new Date(rawDate).getTime() : 0;
+
+        // FAILSAFE: If we still can't parse it, keep it visible in currentWeek
+        if (!shiftTime || isNaN(shiftTime)) {
+          acc.currentWeek.push(shift);
+          return acc;
+        }
+
+        if (shiftTime >= currentWeekTime) {
+          acc.currentWeek.push(shift);
+        } else if (shiftTime >= lastWeekTime && shiftTime < currentWeekTime) {
+          acc.lastWeek.push(shift);
+        } else {
+          acc.older.push(shift);
+        }
+        return acc;
+      },
+      { currentWeek: [], lastWeek: [], older: [] }
+    );
+  }, [groupedShifts]);
+
+  const renderShift = (shift) => {
+    const isExpanded = !!expandedShiftKeys[shift.shiftId];
+    return (
+      <div key={shift.shiftId} className="w-full">
+        {/* Top Level Accordion Trigger */}
+        <button
+          type="button"
+          onClick={() => toggleAccordion(shift.shiftId)}
+          className={`w-full flex items-center justify-between py-3 px-3.5 rounded-xl border text-left transition-all duration-200 ease-in-out cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+            isExpanded
+              ? "bg-slate-50/90 dark:bg-slate-800/80 border-slate-300 dark:border-slate-700 rounded-b-none"
+              : "bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:bg-slate-50/80 dark:hover:bg-slate-800/60 hover:border-slate-300/80 dark:hover:border-slate-700"
+          }`}
+        >
+          <div className="flex items-center gap-2.5 text-slate-700 dark:text-slate-300 text-xs font-medium min-w-0">
+            <div className={`text-slate-400 dark:text-slate-500 transition-transform duration-200 ease-in-out ${isExpanded ? "rotate-90 text-blue-600 dark:text-blue-400" : ""}`}>
+              <ChevronRight className="w-4 h-4" />
+            </div>
+            {/* Anchor Date Title */}
+            <span className="truncate font-semibold text-slate-800 dark:text-slate-100">
+              {shift.shiftDateTitle}
+            </span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal shrink-0 tabular-nums">
+              ({shift.sessions.length} {shift.sessions.length === 1 ? "shift" : "shifts"})
+            </span>
+          </div>
+
+          <div className="font-semibold text-slate-900 dark:text-slate-100 font-mono text-xs tabular-nums shrink-0 pl-2">
+            {secondsToSmartDisplay(shift.dailyTotalSeconds)}
+          </div>
+        </button>
+
+        {/* Sub-Content Panel: Nested List of Individual Sessions */}
+        {isExpanded && (
+          <div className="bg-slate-50/80 dark:bg-slate-950/60 p-3 rounded-b-xl border-x border-b border-slate-200/80 dark:border-slate-800 space-y-2 text-xs animate-in fade-in duration-150 ease-in-out">
+            {shift.sessions.map((sess, idx) => (
+              <div
+                key={sess.id || idx}
+                className={`py-2.5 px-3 bg-white dark:bg-slate-900 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs transition-colors duration-150 ${
+                  sess.isCurrentUser
+                    ? "border-blue-200/80 dark:border-blue-800/80 ring-1 ring-blue-50/80 dark:ring-blue-950/40"
+                    : "border-slate-200/70 dark:border-slate-800 hover:border-slate-300/70 dark:hover:border-slate-700"
+                }`}
+              >
+                <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300 font-medium min-w-0">
+                  <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+                  <span className="font-mono tabular-nums shrink-0">
+                    <strong className="text-slate-800 dark:text-slate-200">{sess.startClock}</strong> &ndash; <strong className="text-slate-800 dark:text-slate-200">{sess.stopClock}</strong>
+                  </span>
+                  {/* User Attribution Badge */}
+                  <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded shrink min-w-0 ${
+                    sess.isCurrentUser
+                      ? "text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800/60"
+                      : "text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700"
+                  }`}>
+                    <User className="w-2.5 h-2.5 shrink-0" />
+                    <span className="truncate">{sess.isCurrentUser ? "You" : sess.userName}</span>
+                  </span>
+                  {sess.isEndOfDay && (
+                    <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200/80 dark:border-amber-800/60 px-1.5 py-0.5 rounded shrink-0">
+                      End of Day
+                    </span>
+                  )}
+                </div>
+                <div className="text-slate-500 dark:text-slate-400 font-medium text-[11px] font-mono tabular-nums shrink-0 pl-5.5 sm:pl-0">
+                  {sess.durationHHMM} ({sess.durationSeconds} secs)
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // TRACE 4: Monitor all SWR data state changes
   useEffect(() => {
     console.log("TRACE 4: SWR Data State Changed:", {
@@ -217,80 +343,63 @@ export default function DailyLogs({ session, refreshKey }) {
         </div>
       ) : (
         <div className="space-y-2">
-          {groupedShifts.map((shift) => {
-            const isExpanded = !!expandedShiftKeys[shift.shiftId];
-            return (
-              <div key={shift.shiftId} className="w-full">
-                {/* Top Level Accordion Trigger */}
-                <button
-                  type="button"
-                  onClick={() => toggleAccordion(shift.shiftId)}
-                  className={`w-full flex items-center justify-between py-3 px-3.5 rounded-xl border text-left transition-all duration-200 ease-in-out cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
-                    isExpanded
-                      ? "bg-slate-50/90 dark:bg-slate-800/80 border-slate-300 dark:border-slate-700 rounded-b-none"
-                      : "bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:bg-slate-50/80 dark:hover:bg-slate-800/60 hover:border-slate-300/80 dark:hover:border-slate-700"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 text-slate-700 dark:text-slate-300 text-xs font-medium min-w-0">
-                    <div className={`text-slate-400 dark:text-slate-500 transition-transform duration-200 ease-in-out ${isExpanded ? "rotate-90 text-blue-600 dark:text-blue-400" : ""}`}>
-                      <ChevronRight className="w-4 h-4" />
-                    </div>
-                    {/* Anchor Date Title */}
-                    <span className="truncate font-semibold text-slate-800 dark:text-slate-100">
-                      {shift.shiftDateTitle}
-                    </span>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal shrink-0 tabular-nums">
-                      ({shift.sessions.length} {shift.sessions.length === 1 ? "session" : "sessions"})
-                    </span>
-                  </div>
+          {categorizedShifts.currentWeek.map(renderShift)}
 
-                  <div className="font-semibold text-slate-900 dark:text-slate-100 font-mono text-xs tabular-nums shrink-0 pl-2">
-                    {secondsToSmartDisplay(shift.dailyTotalSeconds)}
+          {categorizedShifts.lastWeek.length > 0 && (
+            <div className="w-full">
+              <button
+                type="button"
+                onClick={() => toggleAccordion('folder-last-week')}
+                className={`w-full flex items-center justify-between py-3 px-3.5 rounded-xl border text-left transition-all duration-200 ease-in-out cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                  expandedShiftKeys['folder-last-week']
+                    ? "bg-slate-50/90 dark:bg-slate-800/80 border-slate-300 dark:border-slate-700 rounded-b-none"
+                    : "bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:bg-slate-50/80 dark:hover:bg-slate-800/60 hover:border-slate-300/80 dark:hover:border-slate-700"
+                }`}
+              >
+                <div className="flex items-center gap-2.5 text-slate-700 dark:text-slate-300 text-xs font-medium min-w-0">
+                  <div className={`text-slate-400 dark:text-slate-500 transition-transform duration-200 ease-in-out ${expandedShiftKeys['folder-last-week'] ? "rotate-90 text-blue-600 dark:text-blue-400" : ""}`}>
+                    <ChevronRight className="w-4 h-4" />
                   </div>
-                </button>
+                  <span className="truncate font-semibold text-slate-800 dark:text-slate-100">
+                    Last Week
+                  </span>
+                </div>
+              </button>
+              {expandedShiftKeys['folder-last-week'] && (
+                <div className="bg-slate-50/50 dark:bg-slate-950/40 p-2 rounded-b-xl border-x border-b border-slate-200/80 dark:border-slate-800 space-y-2 animate-in fade-in duration-150 ease-in-out">
+                  {categorizedShifts.lastWeek.map(renderShift)}
+                </div>
+              )}
+            </div>
+          )}
 
-                {/* Sub-Content Panel: Nested List of Individual Sessions */}
-                {isExpanded && (
-                  <div className="bg-slate-50/80 dark:bg-slate-950/60 p-3 rounded-b-xl border-x border-b border-slate-200/80 dark:border-slate-800 space-y-2 text-xs animate-in fade-in duration-150 ease-in-out">
-                    {shift.sessions.map((sess, idx) => (
-                      <div
-                        key={sess.id || idx}
-                        className={`py-2.5 px-3 bg-white dark:bg-slate-900 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs transition-colors duration-150 ${
-                          sess.isCurrentUser
-                            ? "border-blue-200/80 dark:border-blue-800/80 ring-1 ring-blue-50/80 dark:ring-blue-950/40"
-                            : "border-slate-200/70 dark:border-slate-800 hover:border-slate-300/70 dark:hover:border-slate-700"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 font-medium min-w-0">
-                          <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
-                          <span className="truncate font-mono tabular-nums">
-                            <strong className="text-slate-800 dark:text-slate-200">{sess.startClock}</strong> &ndash; <strong className="text-slate-800 dark:text-slate-200">{sess.stopClock}</strong>
-                          </span>
-                          {/* User Attribution Badge */}
-                          <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded shrink-0 ${
-                            sess.isCurrentUser
-                              ? "text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800/60"
-                              : "text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700"
-                          }`}>
-                            <User className="w-2.5 h-2.5" />
-                            {sess.isCurrentUser ? "You" : sess.userName}
-                          </span>
-                          {sess.isEndOfDay && (
-                            <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200/80 dark:border-amber-800/60 px-1.5 py-0.5 rounded shrink-0">
-                              End of Day
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-slate-500 dark:text-slate-400 font-medium text-[11px] font-mono tabular-nums shrink-0 pl-5.5 sm:pl-0">
-                          {sess.durationHHMM} ({sess.durationSeconds} secs)
-                        </div>
-                      </div>
-                    ))}
+          {categorizedShifts.older.length > 0 && (
+            <div className="w-full">
+              <button
+                type="button"
+                onClick={() => toggleAccordion('folder-older')}
+                className={`w-full flex items-center justify-between py-3 px-3.5 rounded-xl border text-left transition-all duration-200 ease-in-out cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                  expandedShiftKeys['folder-older']
+                    ? "bg-slate-50/90 dark:bg-slate-800/80 border-slate-300 dark:border-slate-700 rounded-b-none"
+                    : "bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:bg-slate-50/80 dark:hover:bg-slate-800/60 hover:border-slate-300/80 dark:hover:border-slate-700"
+                }`}
+              >
+                <div className="flex items-center gap-2.5 text-slate-700 dark:text-slate-300 text-xs font-medium min-w-0">
+                  <div className={`text-slate-400 dark:text-slate-500 transition-transform duration-200 ease-in-out ${expandedShiftKeys['folder-older'] ? "rotate-90 text-blue-600 dark:text-blue-400" : ""}`}>
+                    <ChevronRight className="w-4 h-4" />
                   </div>
-                )}
-              </div>
-            );
-          })}
+                  <span className="truncate font-semibold text-slate-800 dark:text-slate-100">
+                    Older Logs
+                  </span>
+                </div>
+              </button>
+              {expandedShiftKeys['folder-older'] && (
+                <div className="bg-slate-50/50 dark:bg-slate-950/40 p-2 rounded-b-xl border-x border-b border-slate-200/80 dark:border-slate-800 space-y-2 animate-in fade-in duration-150 ease-in-out">
+                  {categorizedShifts.older.map(renderShift)}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

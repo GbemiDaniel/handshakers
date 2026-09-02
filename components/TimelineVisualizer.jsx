@@ -108,11 +108,12 @@ export default function TimelineVisualizer({
         </div>
       }
     >
-      <div ref={containerRef} className="space-y-6">
+      <div ref={containerRef} className="relative space-y-6">
         {/* Main Timeline Bar Container */}
-        <div className="relative pt-2 pb-1">
-          {/* Background Track Bar */}
-          <div className="relative h-10 w-full bg-slate-100/90 dark:bg-slate-900/50! border border-slate-200/80 dark:border-slate-800! rounded-2xl overflow-hidden shadow-inner flex items-center">
+        <div className="w-full overflow-x-auto scrollbar-hide pt-4 pb-2">
+          <div className="relative min-w-[700px]">
+            {/* Background Track Bar */}
+            <div className="relative h-10 w-full min-w-[700px] bg-slate-100/90 dark:bg-slate-900/50! border border-slate-200/80 dark:border-slate-800! rounded-2xl overflow-hidden shadow-inner flex items-center">
             {validLogs.length === 0 ? (
               <div className="w-full text-center text-xs font-medium text-slate-400 select-none flex items-center justify-center gap-1.5">
                 <Info className="w-3.5 h-3.5" />
@@ -162,49 +163,36 @@ export default function TimelineVisualizer({
             <span>{secondsToSmartDisplay(maxScaleSeconds * 0.75)}</span>
             <span>{secondsToSmartDisplay(maxScaleSeconds)}</span>
           </div>
+          </div>
         </div>
 
-        {/* Hover / Touch Tooltip (Fixed Overlay) */}
+        {/* Decoupled Absolute HUD — floats over legend, no layout shift */}
         {hoveredLog && (
-          <div
-            style={{
-              left: `${tooltipPos.x}px`,
-              top: `${tooltipPos.y - 12}px`,
-            }}
-            className="fixed -translate-x-1/2 -translate-y-full z-50 pointer-events-none transition-all duration-200 ease-in-out animate-in fade-in zoom-in-95"
-          >
-            <div className="bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md text-white text-xs rounded-xl p-3 shadow-xl border border-slate-800 dark:border-slate-700 space-y-1.5 min-w-50">
+          <div className="absolute left-4 right-4 bottom-24 z-50 shadow-2xl transition-all duration-200 ease-in-out animate-in fade-in zoom-in-95">
+            <div className="bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md text-white text-xs rounded-xl p-3 shadow-xl border border-slate-800 dark:border-slate-700 space-y-1.5">
               <div className="flex items-center justify-between border-b border-slate-800 dark:border-slate-800 pb-1.5">
-                <span className="font-semibold text-slate-100 truncate">
+                <span className="font-semibold text-slate-100 truncate pr-4">
                   {profilesMap[hoveredLog.user_id] || `User (${hoveredLog.user_id.slice(0, 6)})`}
                 </span>
-                <span className="text-[10px] font-bold text-blue-400 bg-blue-950/80 px-2 py-0.5 rounded-full border border-blue-800/50 font-mono tabular-nums">
+                <span className="text-[10px] font-bold text-blue-400 bg-blue-950/80 px-2 py-0.5 rounded-full border border-blue-800/50 font-mono tabular-nums shrink-0">
                   {(((hoveredLog.stop_time_seconds - hoveredLog.start_time_seconds) / maxScaleSeconds) * 100).toFixed(1)}% Share
                 </span>
               </div>
               <div className="space-y-1 text-slate-300 text-[11px]">
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-slate-400">Duration:</span>
-                  <span className="font-medium text-white font-mono tabular-nums">
+                  <span className="text-slate-400 whitespace-nowrap">Duration:</span>
+                  <span className="font-medium text-white font-mono tabular-nums whitespace-nowrap">
                     {secondsToSmartDisplay(hoveredLog.stop_time_seconds - hoveredLog.start_time_seconds)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-slate-400">Time Range:</span>
-                  <span className="font-medium text-white font-mono tabular-nums">
+                  <span className="text-slate-400 whitespace-nowrap">Time Range:</span>
+                  <span className="font-medium text-white font-mono tabular-nums whitespace-nowrap">
                     {secondsToHHMMSSString(hoveredLog.start_time_seconds)} – {secondsToHHMMSSString(hoveredLog.stop_time_seconds)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-4 text-[10px] text-slate-400 pt-0.5 font-mono tabular-nums">
-                  <span>Raw Seconds:</span>
-                  <span>
-                    {hoveredLog.start_time_seconds}s → {hoveredLog.stop_time_seconds}s
                   </span>
                 </div>
               </div>
             </div>
-            {/* Tooltip Arrow */}
-            <div className="w-2.5 h-2.5 bg-slate-900/95 dark:bg-slate-950/95 rotate-45 mx-auto -mt-1.5 border-r border-b border-slate-800 dark:border-slate-700" />
           </div>
         )}
 
