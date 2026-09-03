@@ -114,13 +114,13 @@ export default function MarketingCalculator({ onCtaClick }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-      className="relative z-10 w-full max-w-4xl mx-auto rounded-3xl border border-white/[0.1] bg-slate-950/20 backdrop-blur-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.12)] overflow-hidden text-slate-100"
+      className="relative z-10 w-full max-w-4xl mx-auto rounded-3xl border border-white/10 bg-slate-950/20 backdrop-blur-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.12)] overflow-hidden text-slate-100"
     >
       {/* Top Glassmorphic Glare Accent */}
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-400/40 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-blue-400/40 to-transparent pointer-events-none" />
 
       {/* Top Card Header Window Controls */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.08] bg-slate-950/30 backdrop-blur-md">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-white/8 bg-slate-950/30 backdrop-blur-md">
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-red-500/80 shadow-[0_0_8px_rgba(239,68,68,0.4)]" />
           <span className="w-3 h-3 rounded-full bg-amber-500/80 shadow-[0_0_8px_rgba(245,158,11,0.4)]" />
@@ -130,7 +130,7 @@ export default function MarketingCalculator({ onCtaClick }) {
         <button
           type="button"
           onClick={handleReset}
-          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg px-2.5 py-1 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08]"
+          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg px-2.5 py-1 bg-white/4 hover:bg-white/8 border border-white/8"
           title="Reset values"
         >
           <RotateCcw className="w-3.5 h-3.5" />
@@ -141,7 +141,7 @@ export default function MarketingCalculator({ onCtaClick }) {
       {/* ----------------------------------------------------------- */}
       {/* Main Grid: Left Column (Inputs) & Right Column (Receipt)    */}
       {/* ----------------------------------------------------------- */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-white/[0.08]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-white/8">
         {/* ========================================================= */}
         {/* LEFT COLUMN: Your Numbers (Universal HH:MM & Decimal)     */}
         {/* ========================================================= */}
@@ -152,7 +152,7 @@ export default function MarketingCalculator({ onCtaClick }) {
                 <Timer className="w-5 h-5 text-blue-400" />
                 <span>Your Numbers</span>
               </h3>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/[0.04] text-slate-400 border border-white/[0.08] font-mono">
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/4 text-slate-400 border border-white/8 font-mono">
                 HH:MM or Decimal
               </span>
             </div>
@@ -172,7 +172,7 @@ export default function MarketingCalculator({ onCtaClick }) {
                   inputMode="text"
                   value={yourHoursInput}
                   onChange={(e) => setYourHoursInput(e.target.value)}
-                  className="w-full bg-slate-950/60 border border-white/[0.08] rounded-xl pl-4 pr-12 py-3 text-white placeholder-slate-600 font-mono font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-base shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]"
+                  className="w-full bg-slate-950/60 border border-white/8 rounded-xl pl-4 pr-12 py-3 text-white placeholder-slate-600 font-mono font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-base shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]"
                   placeholder="e.g., 10:00"
                 />
                 <span className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-500 text-xs font-mono">
@@ -196,7 +196,7 @@ export default function MarketingCalculator({ onCtaClick }) {
                   inputMode="text"
                   value={teamTotalInput}
                   onChange={(e) => setTeamTotalInput(e.target.value)}
-                  className="w-full bg-slate-950/60 border border-white/[0.08] rounded-xl pl-4 pr-12 py-3 text-white placeholder-slate-600 font-mono font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-base shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]"
+                  className="w-full bg-slate-950/60 border border-white/8 rounded-xl pl-4 pr-12 py-3 text-white placeholder-slate-600 font-mono font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-base shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]"
                   placeholder="e.g., 50:00"
                 />
                 <span className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-500 text-xs font-mono">
@@ -220,7 +220,7 @@ export default function MarketingCalculator({ onCtaClick }) {
                   inputMode="text"
                   value={platformPaidInput}
                   onChange={(e) => setPlatformPaidInput(e.target.value)}
-                  className="w-full bg-slate-950/60 border border-white/[0.08] rounded-xl pl-4 pr-12 py-3 text-white placeholder-slate-600 font-mono font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-base shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]"
+                  className="w-full bg-slate-950/60 border border-white/8 rounded-xl pl-4 pr-12 py-3 text-white placeholder-slate-600 font-mono font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-base shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]"
                   placeholder="e.g., 40:00"
                 />
                 <span className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-500 text-xs font-mono">
@@ -236,7 +236,7 @@ export default function MarketingCalculator({ onCtaClick }) {
         {/* ========================================================= */}
         <div className="lg:col-span-5 p-6 sm:p-8 bg-slate-950/50 flex flex-col justify-between space-y-6">
           <div className="space-y-5">
-            <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+            <div className="flex items-center justify-between border-b border-white/6 pb-3">
               <h3 className="text-base font-semibold text-white tracking-tight flex items-center gap-2">
                 <Receipt className="w-4 h-4 text-blue-400" />
                 <span>The Breakdown</span>
@@ -269,7 +269,7 @@ export default function MarketingCalculator({ onCtaClick }) {
                 )}
               </div>
 
-              <div className="border-t border-dashed border-white/[0.08] pt-3" />
+              <div className="border-t border-dashed border-white/8 pt-3" />
 
               {/* YOUR BILLABLE TIME Callout (Main Time Focus) */}
               <div className="rounded-2xl bg-blue-950/40 border border-blue-600/30 p-4 space-y-1 shadow-[inset_0_1px_1px_rgba(59,130,246,0.15)]">
@@ -297,7 +297,7 @@ export default function MarketingCalculator({ onCtaClick }) {
           </div>
 
           {/* Trojan Horse Marketing CTA */}
-          <div className="pt-4 border-t border-white/[0.06]">
+          <div className="pt-4 border-t border-white/6">
             <button
               type="button"
               onClick={onCtaClick}

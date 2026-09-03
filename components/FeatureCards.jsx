@@ -10,7 +10,7 @@ import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
  */
 function CardWidget1({ isHovered }) {
   return (
-    <div className="relative w-full h-44 rounded-2xl bg-slate-950/50 border border-white/[0.04] flex items-center justify-center overflow-hidden">
+    <div className="relative w-full h-44 rounded-2xl bg-slate-950/50 border border-white/4 flex items-center justify-center overflow-hidden">
       {/* Concentric Radar / Wave Rings (Electric Blue / Cyan) */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="w-36 h-36 rounded-full border border-blue-500/10" />
@@ -65,7 +65,7 @@ function CardWidget1({ isHovered }) {
  */
 function CardWidget2({ isHovered }) {
   return (
-    <div className="relative w-full h-44 rounded-2xl bg-slate-950/50 border border-white/[0.04] flex items-center justify-center overflow-hidden">
+    <div className="relative w-full h-44 rounded-2xl bg-slate-950/50 border border-white/4 flex items-center justify-center overflow-hidden">
       {/* Concentric Ambient Rings */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="w-40 h-40 rounded-full border border-blue-500/10" />
@@ -112,7 +112,7 @@ function CardWidget2({ isHovered }) {
  */
 function CardWidget3({ isHovered }) {
   return (
-    <div className="relative w-full h-44 rounded-2xl bg-slate-950/50 border border-white/[0.04] flex items-center justify-center overflow-hidden">
+    <div className="relative w-full h-44 rounded-2xl bg-slate-950/50 border border-white/4 flex items-center justify-center overflow-hidden">
       {/* Background Glow */}
       <div className="absolute w-36 h-36 rounded-full bg-blue-500/15 blur-2xl pointer-events-none" />
 
@@ -160,7 +160,7 @@ function CardWidget3({ isHovered }) {
  */
 function CardWidget4({ isHovered }) {
   return (
-    <div className="relative w-full h-44 rounded-2xl bg-slate-950/50 border border-white/[0.04] flex flex-col items-center justify-center overflow-hidden">
+    <div className="relative w-full h-44 rounded-2xl bg-slate-950/50 border border-white/4 flex flex-col items-center justify-center overflow-hidden">
       {/* Background Glow */}
       <div className="absolute w-36 h-36 rounded-full bg-cyan-500/15 blur-2xl pointer-events-none" />
 
@@ -183,7 +183,7 @@ function CardWidget4({ isHovered }) {
 
       {/* Floating Horizontal Terminal Card */}
       <div className="w-36 p-3 rounded-xl bg-slate-900/90 border border-white/10 shadow-[0_10px_25px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.1)] space-y-1.5">
-        <div className="w-full h-1.5 rounded-full bg-gradient-to-r from-blue-400 via-cyan-400 to-emerald-400 shadow-[0_0_8px_rgba(56,189,248,0.5)]" />
+        <div className="w-full h-1.5 rounded-full bg-linear-to-r from-blue-400 via-cyan-400 to-emerald-400 shadow-[0_0_8px_rgba(56,189,248,0.5)]" />
         <div className="w-3/4 h-1 rounded-full bg-slate-700" />
       </div>
 
@@ -250,7 +250,7 @@ function InteractiveTiltCard({ card, idx, hasFinePointer }) {
             }
           : undefined
       }
-      className="group relative rounded-[28px] bg-linear-to-b from-[#0a1220]/80 via-[#060a12]/90 to-[#03060a]/95 border border-white/8 hover:border-blue-500/30 p-5 sm:p-6 backdrop-blur-2xl transform-gpu will-change-transform shadow-[0_20px_50px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.08)] transition-all duration-200 flex flex-col justify-between overflow-hidden will-change-transform cursor-pointer"
+      className="group relative rounded-[28px] bg-linear-to-b from-[#0a1220]/80 via-[#060a12]/90 to-[#03060a]/95 border border-white/8 hover:border-blue-500/30 p-5 sm:p-6 backdrop-blur-2xl transform-gpu will-change-transform shadow-[0_20px_50px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.08)] transition-all duration-200 flex flex-col justify-between overflow-hidden cursor-pointer"
     >
       {/* Top Inner Luminous Blue / Cyan Glow */}
       <div className="absolute -top-16 inset-x-0 h-32 bg-blue-500/10 rounded-full blur-3xl opacity-30 group-hover:opacity-70 transition-opacity pointer-events-none" />

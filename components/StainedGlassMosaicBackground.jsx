@@ -121,7 +121,7 @@ function StainedGlassMosaicBackground() {
 
       {/* Left Margin — drop-shadow on desktop only */}
       <svg
-        className="absolute top-0 left-0 w-[450px] max-w-[100vw] h-[120vh] md:drop-shadow-[0_0_10px_rgba(6,182,212,0.15)]"
+        className="absolute top-0 left-0 w-112.5 max-w-[100vw] h-[120vh] md:drop-shadow-[0_0_10px_rgba(6,182,212,0.15)]"
         viewBox="0 0 450 1400"
         preserveAspectRatio="xMinYMin slice"
         xmlns="http://www.w3.org/2000/svg"
@@ -132,7 +132,7 @@ function StainedGlassMosaicBackground() {
 
       {/* Right Margin — mirrored, drop-shadow on desktop only */}
       <svg
-        className="absolute top-0 right-0 w-[450px] max-w-[100vw] h-[120vh] md:drop-shadow-[0_0_10px_rgba(6,182,212,0.15)]"
+        className="absolute top-0 right-0 w-112.5 max-w-[100vw] h-[120vh] md:drop-shadow-[0_0_10px_rgba(6,182,212,0.15)]"
         viewBox="0 0 450 1400"
         preserveAspectRatio="xMaxYMin slice"
         xmlns="http://www.w3.org/2000/svg"

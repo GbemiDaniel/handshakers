@@ -830,7 +830,7 @@ export default function Home() {
         {/* ------------------------------------------------------------- */}
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
           {/* Targeted Feathered Ambient Radial Glow — incredibly soft, from-blue-900/10 per art direction */}
-          <div className="absolute top-20 sm:top-28 left-1/2 -translate-x-1/2 w-[56rem] max-w-full h-[28rem] rounded-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-slate-950/0 to-transparent blur-3xl" />
+          <div className="absolute top-20 sm:top-28 left-1/2 -translate-x-1/2 w-4xl max-w-full h-112 rounded-full bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-blue-900/10 via-slate-950/0 to-transparent blur-3xl" />
 
           {/* Top-Left Volumetric Deep Primary Blue Atmosphere */}
           <motion.div
@@ -879,7 +879,7 @@ export default function Home() {
                   <span className="flex flex-wrap items-center justify-center gap-x-3 md:gap-x-4 mt-3 sm:mt-5 w-full">
                     <span className="flex items-center whitespace-nowrap font-bold tracking-tight">
                       <TeamNodeToken className="w-9 h-9 md:w-11 md:h-11 lg:w-14 lg:h-14 mr-2 sm:mr-3 shrink-0"/>
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-500 pb-1">
+                      <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-blue-500 pb-1">
                         transparent
                       </span>
                     </span>
@@ -888,7 +888,7 @@ export default function Home() {
                     
                     <span className="flex items-center whitespace-nowrap font-bold tracking-tight">
                       <PrecisionChronometerToken className="w-9 h-9 md:w-11 md:h-11 lg:w-14 lg:h-14 mr-2 sm:mr-3 shrink-0"/>
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 pb-1">
+                      <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400 pb-1">
                         exact
                       </span>
                     </span>
@@ -1075,14 +1075,14 @@ export default function Home() {
             }}
             className="w-full max-w-6xl mx-auto py-24 sm:py-32 px-6 relative z-10"
           >
-            <div className="flex flex-col md:flex-row items-stretch border-y md:border-y-0 border-white/[0.05] md:border-transparent">
+            <div className="flex flex-col md:flex-row items-stretch border-y md:border-y-0 border-white/5 md:border-transparent">
               
               {/* Pillar 1: Automated Payouts */}
               <motion.div 
                 variants={{ hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } } }}
-                className="group relative flex flex-col items-start text-left flex-1 border-b md:border-b-0 md:border-r border-white/[0.05] py-8 md:py-4 md:px-8 lg:px-12 md:pl-0 overflow-hidden"
+                className="group relative flex flex-col items-start text-left flex-1 border-b md:border-b-0 md:border-r border-white/5 py-8 md:py-4 md:px-8 lg:px-12 md:pl-0 overflow-hidden"
               >
-                <div className="absolute inset-0 bg-gradient-to-b from-blue-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                <div className="absolute inset-0 bg-linear-to-b from-blue-500/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                 
                 <h3 className="text-base sm:text-lg md:text-xl font-medium text-slate-300 group-hover:text-white transition-colors duration-300 tracking-wide mb-2">
                   Automated Team Payouts
@@ -1095,9 +1095,9 @@ export default function Home() {
               {/* Pillar 2: Trust & Autonomy */}
               <motion.div 
                 variants={{ hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } } }}
-                className="group relative flex flex-col items-start text-left flex-1 border-b md:border-b-0 md:border-r border-white/[0.05] py-8 md:py-4 md:px-8 lg:px-12 overflow-hidden"
+                className="group relative flex flex-col items-start text-left flex-1 border-b md:border-b-0 md:border-r border-white/5 py-8 md:py-4 md:px-8 lg:px-12 overflow-hidden"
               >
-                <div className="absolute inset-0 bg-gradient-to-b from-cyan-400/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                <div className="absolute inset-0 bg-linear-to-b from-cyan-400/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                 
                 <h3 className="text-base sm:text-lg md:text-xl font-medium text-slate-300 group-hover:text-white transition-colors duration-300 tracking-wide mb-2">
                   Independent Time Tracking
@@ -1112,7 +1112,7 @@ export default function Home() {
                 variants={{ hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } } }}
                 className="group relative flex flex-col items-start text-left flex-1 py-8 md:py-4 md:px-8 lg:px-12 md:pr-0 overflow-hidden"
               >
-                <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                <div className="absolute inset-0 bg-linear-to-b from-indigo-500/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                 
                 <h3 className="text-base sm:text-lg md:text-xl font-medium text-slate-300 group-hover:text-white transition-colors duration-300 tracking-wide mb-2">
                   Real-Time Transparency

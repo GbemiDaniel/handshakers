@@ -120,9 +120,9 @@ export function CyberGridIcon({ type = "chip", accent = "purple", className = ""
     : "rgba(16,185,129,0.3)";
 
   return (
-    <div className={`relative w-16 h-16 rounded-2xl bg-slate-900/80 border border-white/[0.08] flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform duration-300 ${className}`}>
+    <div className={`relative w-16 h-16 rounded-2xl bg-slate-900/80 border border-white/8 flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform duration-300 ${className}`}>
       {/* Background Matrix Grid */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:8px_8px]" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-size-[8px_8px]" />
       
       {/* Ambient Inner Glow */}
       <div

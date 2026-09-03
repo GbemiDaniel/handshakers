@@ -8,7 +8,7 @@ export default function AppBootSequence() {
     <motion.div
       initial={{ opacity: 1 }}
       exit={{ opacity: 0, transition: { duration: 0.6, ease: "easeInOut" } }}
-      className="fixed inset-0 z-[9999] bg-[#030712] flex flex-col items-center justify-center overflow-hidden"
+      className="fixed inset-0 z-9999 bg-[#030712] flex flex-col items-center justify-center overflow-hidden"
     >
       {/* Continuous Breathing Volumetric Glow */}
       <div className="boot-glow-entrance absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -23,15 +23,15 @@ export default function AppBootSequence() {
       </div>
 
       {/* Active Processing Scanner Line */}
-      <div className="w-full max-w-lg relative flex items-center justify-center h-[2px] overflow-hidden">
+      <div className="w-full max-w-lg relative flex items-center justify-center h-0.5 overflow-hidden">
         {/* Static Wide Blue Base */}
         <div className="boot-axis-entrance absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-900/60 to-transparent origin-center" />
+          <div className="absolute inset-0 bg-linear-to-r from-transparent via-blue-900/60 to-transparent origin-center" />
         </div>
         
         {/* Infinite Sweeping Cyan Core */}
         <div className="boot-scanner-entrance absolute inset-y-0 w-1/3">
-          <div className="boot-scanner-sweep absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_15px_rgba(34,211,238,0.8)]" />
+          <div className="boot-scanner-sweep absolute inset-0 bg-linear-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_15px_rgba(34,211,238,0.8)]" />
         </div>
       </div>
 

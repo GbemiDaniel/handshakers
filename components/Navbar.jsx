@@ -82,7 +82,7 @@ export default function Navbar({ onAuthModalOpen }) {
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       className={`fixed top-0 inset-x-0 z-50 will-change-transform transition-all duration-300 ${
         isScrolled
-          ? "bg-[#090d16]/85 backdrop-blur-xl border-b border-white/[0.08] shadow-[0_4px_30px_rgba(0,0,0,0.5)] md:bg-transparent md:backdrop-blur-none md:border-transparent md:shadow-none"
+          ? "bg-[#090d16]/85 backdrop-blur-xl border-b border-white/8 shadow-[0_4px_30px_rgba(0,0,0,0.5)] md:bg-transparent md:backdrop-blur-none md:border-transparent md:shadow-none"
           : "bg-transparent border-transparent"
       }`}
     >
@@ -135,7 +135,7 @@ export default function Navbar({ onAuthModalOpen }) {
                 {isHovered && (
                   <motion.div
                     layoutId="nav-hover-pill"
-                    className="absolute inset-0 bg-gradient-to-b from-white/[0.12] to-white/[0.04] rounded-full border border-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_10px_rgba(0,0,0,0.3)]"
+                    className="absolute inset-0 bg-linear-to-b from-white/12 to-white/4 rounded-full border border-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_10px_rgba(0,0,0,0.3)]"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -147,7 +147,7 @@ export default function Navbar({ onAuthModalOpen }) {
                 {isActive && !isHovered && (
                   <motion.div
                     layoutId="nav-active-pill"
-                    className="absolute inset-0 bg-white/[0.06] rounded-full border border-white/[0.08]"
+                    className="absolute inset-0 bg-white/6 rounded-full border border-white/8"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -177,7 +177,7 @@ export default function Navbar({ onAuthModalOpen }) {
             whileTap={{ scale: 0.96 }}
             type="button"
             onClick={onAuthModalOpen}
-            className="text-xs sm:text-sm font-medium text-slate-300 hover:text-white px-3 sm:px-3.5 py-1.5 rounded-full hover:bg-white/[0.06] transition-all duration-200 cursor-pointer"
+            className="text-xs sm:text-sm font-medium text-slate-300 hover:text-white px-3 sm:px-3.5 py-1.5 rounded-full hover:bg-white/6 transition-all duration-200 cursor-pointer"
           >
             Sign In
           </motion.button>

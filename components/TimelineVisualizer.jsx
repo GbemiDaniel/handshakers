@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import BaseCard from "./BaseCard";
-import { Clock, Users, Info } from "lucide-react";
+import { Clock, Users, Info, ZoomIn, ZoomOut } from "lucide-react";
 import { getUserColorClass, getUserColorTheme } from "@/utils/colorUtils";
 import { secondsToSmartDisplay, secondsToHHMMSSString } from "@/utils/timeUtils";
 
@@ -12,7 +12,11 @@ export default function TimelineVisualizer({
 }) {
   const [hoveredLog, setHoveredLog] = useState(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const [zoomLevel, setZoomLevel] = useState(1);
   const containerRef = useRef(null);
+
+  const handleZoomIn = () => setZoomLevel((prev) => Math.min(prev + 0.5, 4));
+  const handleZoomOut = () => setZoomLevel((prev) => Math.max(prev - 0.5, 1));
 
   // Calculate dynamic scale bounds
   const maxScaleSeconds = useMemo(() => {
@@ -102,18 +106,39 @@ export default function TimelineVisualizer({
       title="Team Time Log Timeline"
       subtitle="Visual breakdown of individual time logs across the total timeline"
       headerAction={
-        <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-300 bg-slate-100/80 dark:bg-slate-800/50 px-3 py-1.5 rounded-xl border border-slate-200/60 dark:border-slate-700">
-          <Clock className="w-3.5 h-3.5 text-slate-400" />
-          <span>Max Duration: {secondsToSmartDisplay(maxScaleSeconds)}</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-300 bg-slate-100/80 dark:bg-slate-800/50 px-3 py-1.5 rounded-xl border border-slate-200/60 dark:border-slate-700">
+            <Clock className="w-3.5 h-3.5 text-slate-400" />
+            <span>Max Duration: {secondsToSmartDisplay(maxScaleSeconds)}</span>
+          </div>
+          <div className="flex items-center space-x-1 bg-slate-100/80 dark:bg-slate-800/50 rounded-full p-1 border border-slate-200/60 dark:border-slate-700/50">
+            <button
+              onClick={handleZoomOut}
+              disabled={zoomLevel === 1}
+              className="w-8 h-8 flex items-center justify-center rounded-full text-slate-500 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-200 ease-in-out cursor-pointer"
+              aria-label="Zoom out"
+            >
+              <ZoomOut className="w-3.5 h-3.5" />
+            </button>
+            <span className="text-xs font-semibold w-8 text-center text-slate-600 dark:text-slate-300 tabular-nums select-none">{zoomLevel}x</span>
+            <button
+              onClick={handleZoomIn}
+              disabled={zoomLevel === 4}
+              className="w-8 h-8 flex items-center justify-center rounded-full text-slate-500 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-200 ease-in-out cursor-pointer"
+              aria-label="Zoom in"
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       }
     >
       <div ref={containerRef} className="relative space-y-6">
         {/* Main Timeline Bar Container */}
         <div className="w-full overflow-x-auto scrollbar-hide pt-4 pb-2">
-          <div className="relative min-w-[700px]">
+          <div className="relative" style={{ minWidth: `${zoomLevel * 100}%` }}>
             {/* Background Track Bar */}
-            <div className="relative h-10 w-full min-w-[700px] bg-slate-100/90 dark:bg-slate-900/50! border border-slate-200/80 dark:border-slate-800! rounded-2xl overflow-hidden shadow-inner flex items-center">
+            <div className="relative h-10 w-full bg-slate-100/90 dark:bg-slate-900/50! border border-slate-200/80 dark:border-slate-800! rounded-2xl overflow-hidden shadow-inner flex items-center" style={{ minWidth: `${zoomLevel * 100}%` }}>
             {validLogs.length === 0 ? (
               <div className="w-full text-center text-xs font-medium text-slate-400 select-none flex items-center justify-center gap-1.5">
                 <Info className="w-3.5 h-3.5" />

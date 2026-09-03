@@ -59,7 +59,7 @@ export default function EditCapacityModal({ isOpen, onClose, workspace }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100]">
+    <div className="fixed inset-0 z-100">
       {/* Backdrop Layer */}
       <div
         className="absolute inset-0 bg-slate-900/40 dark:bg-slate-950/70 backdrop-blur-sm transition-opacity duration-200 ease-in-out animate-in fade-in"
