@@ -34,14 +34,14 @@ export function AccountProvider({ children, session }) {
       try {
         const { data: profile, error } = await supabase
           .from("profiles")
-          .select("is_super_admin, role")
+          .select("is_super_admin")
           .eq("id", userId)
           .single();
 
         if (!error && profile) {
-          // Explicitly set isSuperAdmin state from profile column
-          const adminFlag = profile.is_super_admin === true || profile.is_super_admin === "true" || profile.role === "admin";
-          setIsSuperAdmin(Boolean(adminFlag));
+          // Must match the database's notion of super admin exactly — treating
+          // profiles.role as a fallback showed buttons the policies then refused.
+          setIsSuperAdmin(profile.is_super_admin === true);
         } else {
           setIsSuperAdmin(false);
         }

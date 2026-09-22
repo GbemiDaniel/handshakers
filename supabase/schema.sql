@@ -91,14 +91,22 @@ $$ LANGUAGE sql SECURITY DEFINER SET search_path = public;
 REVOKE ALL ON FUNCTION public.get_user_workspaces() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.get_user_workspaces() TO authenticated;
 
--- Recursion-safe Admin check helper function
-CREATE OR REPLACE FUNCTION public.is_admin(user_id UUID)
+-- Admin model: a super admin (profiles.is_super_admin) over everything, plus an
+-- optional lead per workspace (account_members.role = 'admin') whose admin
+-- powers apply inside that workspace only. profiles.role carries no meaning.
+--
+-- Reads the caller from auth.uid() rather than taking a user id, so it cannot
+-- be used to probe whether other people are admins.
+CREATE OR REPLACE FUNCTION public.is_workspace_admin(p_account_id UUID)
 RETURNS BOOLEAN AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.profiles
-    WHERE id = user_id AND (role = 'admin' OR is_super_admin = true)
-  );
-$$ LANGUAGE sql SECURITY DEFINER SET search_path = public;
+  SELECT EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_super_admin = true)
+      OR EXISTS (SELECT 1 FROM public.account_members
+                 WHERE account_id = p_account_id AND user_id = auth.uid()
+                   AND role = 'admin' AND COALESCE(status, 'active') = 'active');
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
+
+REVOKE ALL ON FUNCTION public.is_workspace_admin(UUID) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.is_workspace_admin(UUID) TO authenticated;
 
 -- Automatic profile creation on new user signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -189,20 +197,20 @@ CREATE POLICY "Log own time in own workspaces"
     OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_super_admin = true)
   );
 
--- Update: Only Admins can update any time log
-CREATE POLICY "Allow admins to update time logs"
+-- Update/Delete: admins of the log's workspace (and super admins). Members
+-- remove their own entries through undo_last_time_log, not directly.
+CREATE POLICY "Workspace admins edit logs"
   ON public.time_logs
   FOR UPDATE
   TO authenticated
-  USING (public.is_admin(auth.uid()))
-  WITH CHECK (public.is_admin(auth.uid()));
+  USING (public.is_workspace_admin(account_id))
+  WITH CHECK (public.is_workspace_admin(account_id));
 
--- Delete: Only Admins can delete any time log
-CREATE POLICY "Allow admins to delete time logs"
+CREATE POLICY "Workspace admins delete logs"
   ON public.time_logs
   FOR DELETE
   TO authenticated
-  USING (public.is_admin(auth.uid()));
+  USING (public.is_workspace_admin(account_id));
 
 -- ------------------------------------------
 -- 6. Undo (LIFO stack pop)
@@ -220,8 +228,9 @@ $$ LANGUAGE sql STABLE SET search_path = public;
 -- Pops the newest entry off an account's log stack.
 --
 -- A member may only remove their own entry, and only while it is still on top —
--- once someone else has logged over it, they must undo theirs first. Admins may
--- reach past both that rule and the cycle boundary, but the call returns
+-- once someone else has logged over it, they must undo theirs first. Admins of
+-- that workspace may reach past both that rule and the cycle boundary, but the
+-- call returns
 -- 'confirm_required' first so the UI can name whose entry is at stake before a
 -- second call with p_force passes.
 --
@@ -264,7 +273,7 @@ BEGIN
     RETURN jsonb_build_object('status', 'error', 'reason', 'no_logs');
   END IF;
 
-  v_is_admin    := public.is_admin(v_caller);
+  v_is_admin    := public.is_workspace_admin(p_account_id);
   v_cycle_start := public.current_cycle_start();
   v_other_user  := v_top.user_id <> v_caller;
   v_prior_cycle := v_top.created_at < v_cycle_start;
@@ -320,3 +329,8 @@ GRANT EXECUTE ON FUNCTION public.undo_last_time_log(UUID, BOOLEAN) TO authentica
 -- is not yet a complete source of truth for a fresh deploy — reconstructing
 -- those two tables and their policies is a deliberate follow-up, not done
 -- as a side effect of this change.
+--
+-- Their write policies do follow the admin model above and live only in the
+-- database for now: accounts UPDATE and account_members INSERT/UPDATE/DELETE
+-- all require public.is_workspace_admin(<the row's workspace>). The unused
+-- team_settings table also exists only in the database.
