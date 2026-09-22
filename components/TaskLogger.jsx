@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import BaseCard from "./BaseCard";
 import { supabase } from "@/utils/supabase";
 import { useLatestGlobalStop } from "@/hooks/useLatestGlobalStop";
@@ -15,13 +15,13 @@ export default function TaskLogger({ session, onUpdate }) {
   const [activeTypists, setActiveTypists] = useState([]);
   const [stopTimeInput, setStopTimeInput] = useState("");
   const [isEndOfDay, setIsEndOfDay] = useState(false);
-  const [userRole, setUserRole] = useState("member");
   const { activeAccount: contextAccount } = useAccount();
   const activeAccount = useAdminStore(state => 
     state.workspaces.find(w => w.id === contextAccount?.id)
   ) || contextAccount;
 
   const [showRollbackModal, setShowRollbackModal] = useState(false);
+  const [pendingConfirm, setPendingConfirm] = useState(null);
   const [isAggregatorOpen, setIsAggregatorOpen] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
@@ -134,30 +134,6 @@ export default function TaskLogger({ session, onUpdate }) {
   const removeTask = (idToRemove) => {
     setTasks(tasks.filter(task => task.id !== idToRemove));
   };
-
-  // 1. Fetch user role from profiles table
-  const fetchUserRole = useCallback(async () => {
-    if (!session?.user?.id) return;
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", session.user.id)
-        .single();
-
-      if (!error && data?.role) {
-        setUserRole(data.role);
-      }
-    } catch (err) {
-      console.error("Error fetching user role:", err);
-    }
-  }, [session]);
-
-  // Fetch user role on mount
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchUserRole();
-  }, [fetchUserRole]);
 
   // Supabase Presence for live typing indicator
   useEffect(() => {
@@ -346,49 +322,52 @@ export default function TaskLogger({ session, onUpdate }) {
     }
   };
 
-  // Admin Rollback Function
-  const confirmRollback = async () => {
-    if (userRole !== "admin") return;
-    
-    setShowRollbackModal(false);
+  const ROLLBACK_ERRORS = {
+    not_authenticated: () => "Your session expired. Please sign in again.",
+    no_account: () => "No active workspace selected.",
+    no_logs: () => "No time logs exist to undo.",
+    not_owner: (r) =>
+      `${r.owner_name || "Someone else"} logged the most recent entry. They need to undo theirs first.`,
+    prior_cycle: () => "That entry belongs to a previous cycle and is locked.",
+  };
 
+  // Pops the newest entry off the account's stack. The RPC owns the ownership,
+  // stack-position and cycle rules — it returns 'confirm_required' when an admin
+  // is about to reach past them, which re-opens the modal with the specifics.
+  const confirmRollback = async (force = false) => {
+    setShowRollbackModal(false);
     setRollingBack(true);
 
     try {
-      // Find the latest entry in time_logs table
-      const { data: latestRows, error: findErr } = await supabase
-        .from("time_logs")
-        .select("id, start_time_seconds, stop_time_seconds")
-        .eq("account_id", activeAccount?.id)
-        .order("stop_time_seconds", { ascending: false })
-        .limit(1);
+      const { data, error } = await supabase.rpc("undo_last_time_log", {
+        p_account_id: activeAccount?.id ?? null,
+        p_force: force,
+      });
 
-      if (findErr) throw findErr;
+      if (error) throw error;
 
-      if (!latestRows || latestRows.length === 0) {
-        toast.error("No time logs exist to rollback.");
-        setRollingBack(false);
+      if (data?.status === "confirm_required") {
+        setPendingConfirm(data);
+        setShowRollbackModal(true);
         return;
       }
 
-      const latestId = latestRows[0].id;
+      if (data?.status === "error") {
+        const build = ROLLBACK_ERRORS[data.reason];
+        throw new Error(build ? build(data) : "Unable to undo that entry.");
+      }
 
-      // Delete latest row
-      const { error: deleteErr } = await supabase
-        .from("time_logs")
-        .delete()
-        .eq("id", latestId);
-
-      if (deleteErr) throw deleteErr;
-
-      toast.success("Last global entry successfully rolled back!");
+      setPendingConfirm(null);
+      toast.success(
+        `Entry rolled back — ${secondsToSmartDisplay(data.stop_time_seconds)} removed.`
+      );
       await refreshLatestStop();
 
-      // Part 2: Trigger global refresh for parent dashboard
       if (onUpdate) onUpdate();
     } catch (err) {
-      console.error("Error during admin rollback:", err);
-      toast.error(err.message || "Failed to rollback entry. Verify admin RLS permissions.");
+      console.error("Error during rollback:", err);
+      setPendingConfirm(null);
+      toast.error(err.message || "Failed to undo entry. Please try again.");
     } finally {
       setRollingBack(false);
     }
@@ -522,12 +501,11 @@ export default function TaskLogger({ session, onUpdate }) {
           )}
         </button>
 
-        {/* Admin Rollback Utility Button (Rendered only for admins) */}
-        {userRole === "admin" && (
-          <div className="pt-2 flex justify-center border-t border-slate-100 dark:border-slate-800">
+        {/* Undo — available to everyone; the RPC decides whether it is allowed */}
+        <div className="pt-2 flex justify-center border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
-              onClick={() => setShowRollbackModal(true)}
+              onClick={() => { setPendingConfirm(null); setShowRollbackModal(true); }}
               disabled={rollingBack}
               className="inline-flex items-center gap-1.5 text-xs font-medium text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50/70 dark:hover:bg-red-950/40 active:scale-[0.97] px-3 py-1.5 rounded-lg border border-red-200/70 dark:border-red-900/60 transition-all duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
             >
@@ -540,8 +518,7 @@ export default function TaskLogger({ session, onUpdate }) {
                 </>
               )}
             </button>
-          </div>
-        )}
+        </div>
       </form>
 
       {/* Tailwind CSS Modal Overlay */}
@@ -555,10 +532,28 @@ export default function TaskLogger({ session, onUpdate }) {
                 </div>
                 <div className="flex-1 mt-0.5">
                   <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                    Confirm Rollback
+                    {pendingConfirm ? "Override Required" : "Confirm Rollback"}
                   </h3>
                   <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Are you sure you want to delete the latest global team time log? This action cannot be undone and will reset the global start time.
+                    {pendingConfirm ? (
+                      <>
+                        {pendingConfirm.is_other_user && (
+                          <>
+                            This entry belongs to{" "}
+                            <strong className="text-slate-700 dark:text-slate-300">
+                              {pendingConfirm.owner_name || "another teammate"}
+                            </strong>
+                            , not you.{" "}
+                          </>
+                        )}
+                        {pendingConfirm.is_prior_cycle && (
+                          <>It also belongs to a previous cycle, so removing it changes settled payout figures. </>
+                        )}
+                        Deleting it uses your admin override and cannot be undone.
+                      </>
+                    ) : (
+                      <>Are you sure you want to undo the most recent time log? This cannot be undone and will reset the global start time.</>
+                    )}
                   </p>
                 </div>
               </div>
@@ -566,17 +561,17 @@ export default function TaskLogger({ session, onUpdate }) {
             <div className="bg-slate-50 dark:bg-slate-950/60 px-5 py-4 sm:px-6 flex items-center justify-end gap-3 border-t border-slate-200/60 dark:border-slate-800">
               <button
                 type="button"
-                onClick={() => setShowRollbackModal(false)}
+                onClick={() => { setShowRollbackModal(false); setPendingConfirm(null); }}
                 className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200 dark:focus:ring-slate-700"
               >
                 Cancel
               </button>
               <button
                 type="button"
-                onClick={confirmRollback}
+                onClick={() => confirmRollback(Boolean(pendingConfirm))}
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 border border-transparent rounded-xl transition-colors shadow-xs focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
               >
-                Delete Entry
+                {pendingConfirm ? "Override & Delete" : "Delete Entry"}
               </button>
             </div>
           </div>

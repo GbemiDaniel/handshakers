@@ -129,3 +129,107 @@ CREATE POLICY "Allow admins to delete time logs"
   FOR DELETE
   TO authenticated
   USING (public.is_admin(auth.uid()));
+
+-- ------------------------------------------
+-- 6. Undo (LIFO stack pop)
+-- ------------------------------------------
+
+-- Monday 00:00 America/Los_Angeles, as a timestamptz. date_trunc('week', ...)
+-- is Monday-anchored and resolves DST via the named zone, so this stays correct
+-- across the March/November transitions.
+CREATE OR REPLACE FUNCTION public.current_cycle_start()
+RETURNS TIMESTAMPTZ AS $$
+  SELECT date_trunc('week', (now() AT TIME ZONE 'America/Los_Angeles'))
+           AT TIME ZONE 'America/Los_Angeles';
+$$ LANGUAGE sql STABLE SET search_path = public;
+
+-- Pops the newest entry off an account's log stack.
+--
+-- A member may only remove their own entry, and only while it is still on top —
+-- once someone else has logged over it, they must undo theirs first. Admins may
+-- reach past both that rule and the cycle boundary, but the call returns
+-- 'confirm_required' first so the UI can name whose entry is at stake before a
+-- second call with p_force passes.
+--
+-- SECURITY DEFINER: authorization is enforced in the body below, not by RLS.
+-- The advisory lock serialises undos per account, closing the read-then-delete
+-- race where two callers could each pop a different row believing it was top.
+CREATE OR REPLACE FUNCTION public.undo_last_time_log(
+  p_account_id UUID,
+  p_force BOOLEAN DEFAULT FALSE
+)
+RETURNS JSONB AS $$
+DECLARE
+  v_caller       UUID := auth.uid();
+  v_is_admin     BOOLEAN;
+  v_top          public.time_logs%ROWTYPE;
+  v_cycle_start  TIMESTAMPTZ;
+  v_owner_name   TEXT;
+  v_other_user   BOOLEAN;
+  v_prior_cycle  BOOLEAN;
+BEGIN
+  IF v_caller IS NULL THEN
+    RETURN jsonb_build_object('status', 'error', 'reason', 'not_authenticated');
+  END IF;
+
+  IF p_account_id IS NULL THEN
+    RETURN jsonb_build_object('status', 'error', 'reason', 'no_account');
+  END IF;
+
+  PERFORM pg_advisory_xact_lock(hashtextextended(p_account_id::text, 0));
+
+  -- (created_at, id) rather than created_at alone: seeded rows land on whole
+  -- hours and can collide, and ordering must be total for "top" to be a fact.
+  SELECT * INTO v_top
+  FROM public.time_logs
+  WHERE account_id = p_account_id
+  ORDER BY created_at DESC, id DESC
+  LIMIT 1;
+
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('status', 'error', 'reason', 'no_logs');
+  END IF;
+
+  v_is_admin    := public.is_admin(v_caller);
+  v_cycle_start := public.current_cycle_start();
+  v_other_user  := v_top.user_id <> v_caller;
+  v_prior_cycle := v_top.created_at < v_cycle_start;
+
+  SELECT full_name INTO v_owner_name FROM public.profiles WHERE id = v_top.user_id;
+
+  IF NOT v_is_admin THEN
+    IF v_other_user THEN
+      RETURN jsonb_build_object(
+        'status', 'error', 'reason', 'not_owner', 'owner_name', v_owner_name
+      );
+    END IF;
+    IF v_prior_cycle THEN
+      RETURN jsonb_build_object('status', 'error', 'reason', 'prior_cycle');
+    END IF;
+  ELSIF (v_other_user OR v_prior_cycle) AND NOT p_force THEN
+    RETURN jsonb_build_object(
+      'status', 'confirm_required',
+      'owner_name', v_owner_name,
+      'is_other_user', v_other_user,
+      'is_prior_cycle', v_prior_cycle,
+      'stop_time_seconds', v_top.stop_time_seconds
+    );
+  END IF;
+
+  DELETE FROM public.time_logs WHERE id = v_top.id;
+
+  RETURN jsonb_build_object(
+    'status', 'ok',
+    'deleted_id', v_top.id,
+    'stop_time_seconds', v_top.stop_time_seconds,
+    'owner_name', v_owner_name
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Supabase default privileges grant EXECUTE to anon at CREATE time, and
+-- REVOKE ... FROM PUBLIC does not remove an explicit role grant, so anon is
+-- revoked by name.
+REVOKE ALL ON FUNCTION public.undo_last_time_log(UUID, BOOLEAN) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.undo_last_time_log(UUID, BOOLEAN) FROM anon;
+GRANT EXECUTE ON FUNCTION public.undo_last_time_log(UUID, BOOLEAN) TO authenticated;
