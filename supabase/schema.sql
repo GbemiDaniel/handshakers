@@ -163,20 +163,30 @@ CREATE POLICY "Allow users to insert own profile"
 -- 5. RLS Policies: Time Logs Table
 -- ------------------------------------------
 
--- Read: Authenticated users can read all time logs (required for snap-on handoff calculation)
-CREATE POLICY "Allow authenticated users to read all time logs"
+-- Keep exactly one policy per command here. Permissive policies OR together,
+-- so a leftover USING (true) silently overrides any scoped policy beside it —
+-- that is how every workspace's logs became readable by every user.
+
+-- Read: members see logs in their own workspaces; super admins see all.
+CREATE POLICY "Read logs in own workspaces"
   ON public.time_logs
   FOR SELECT
   TO authenticated
-  USING (true);
+  USING (
+    account_id IN (SELECT public.get_user_workspaces())
+    OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_super_admin = true)
+  );
 
--- Insert: Members can insert logs for themselves; Admins can insert logs for anyone
-CREATE POLICY "Allow members to insert own time logs or admin insert any"
+-- Insert: your own hours, into a workspace you belong to. Checking user_id
+-- matters — payouts are computed per user, so logging under a teammate's name
+-- would move pay between people.
+CREATE POLICY "Log own time in own workspaces"
   ON public.time_logs
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    auth.uid() = user_id OR public.is_admin(auth.uid())
+    (user_id = auth.uid() AND account_id IN (SELECT public.get_user_workspaces()))
+    OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_super_admin = true)
   );
 
 -- Update: Only Admins can update any time log
