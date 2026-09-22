@@ -40,6 +40,57 @@ ALTER TABLE public.time_logs ENABLE ROW LEVEL SECURITY;
 -- 3. Helper Functions & Triggers
 -- ------------------------------------------
 
+-- Safety net: any table created in the public schema starts with RLS enabled,
+-- closing the classic Supabase footgun of a forgotten ALTER TABLE ... ENABLE
+-- ROW LEVEL SECURITY exposing a new table over PostgREST. Runs with elevated
+-- privileges to alter tables it doesn't otherwise own, but an event trigger
+-- only fires on DDL — it is not a callable RPC endpoint, so EXECUTE is
+-- revoked from every role below to keep it out of the exposed API surface.
+CREATE OR REPLACE FUNCTION public.rls_auto_enable()
+RETURNS event_trigger AS $$
+DECLARE
+  cmd record;
+BEGIN
+  FOR cmd IN
+    SELECT *
+    FROM pg_event_trigger_ddl_commands()
+    WHERE command_tag IN ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+      AND object_type IN ('table','partitioned table')
+  LOOP
+     IF cmd.schema_name IS NOT NULL AND cmd.schema_name IN ('public') AND cmd.schema_name NOT IN ('pg_catalog','information_schema') AND cmd.schema_name NOT LIKE 'pg_toast%' AND cmd.schema_name NOT LIKE 'pg_temp%' THEN
+      BEGIN
+        EXECUTE format('alter table if exists %s enable row level security', cmd.object_identity);
+        RAISE LOG 'rls_auto_enable: enabled RLS on %', cmd.object_identity;
+      EXCEPTION
+        WHEN OTHERS THEN
+          RAISE LOG 'rls_auto_enable: failed to enable RLS on %', cmd.object_identity;
+      END;
+     ELSE
+        RAISE LOG 'rls_auto_enable: skip % (either system schema or not in enforced list: %.)', cmd.object_identity, cmd.schema_name;
+     END IF;
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog;
+
+REVOKE ALL ON FUNCTION public.rls_auto_enable() FROM PUBLIC, anon, authenticated;
+
+DROP EVENT TRIGGER IF EXISTS ensure_rls;
+CREATE EVENT TRIGGER ensure_rls ON ddl_command_end
+  WHEN TAG IN ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+  EXECUTE FUNCTION public.rls_auto_enable();
+
+-- Used by RLS policies on account_members and time_logs to list the accounts
+-- the caller belongs to, without a policy on account_members recursing into
+-- account_members itself. account_members and accounts are not declared in
+-- this file — see the note at the end of this file.
+CREATE OR REPLACE FUNCTION public.get_user_workspaces()
+RETURNS SETOF UUID AS $$
+  SELECT account_id FROM public.account_members WHERE user_id = auth.uid();
+$$ LANGUAGE sql SECURITY DEFINER SET search_path = public;
+
+REVOKE ALL ON FUNCTION public.get_user_workspaces() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_user_workspaces() TO authenticated;
+
 -- Recursion-safe Admin check helper function
 CREATE OR REPLACE FUNCTION public.is_admin(user_id UUID)
 RETURNS BOOLEAN AS $$
@@ -62,12 +113,18 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
   RETURN new;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Only fires via the trigger above; no direct caller is legitimate. Postgres
+-- already refuses a direct call structurally ("trigger functions can only be
+-- called as triggers"), but the grant is revoked too so it doesn't show up as
+-- a callable SECURITY DEFINER endpoint in the API surface.
+REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
 
 -- ------------------------------------------
 -- 4. RLS Policies: Profiles Table
@@ -240,3 +297,16 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 REVOKE ALL ON FUNCTION public.undo_last_time_log(UUID, BOOLEAN) FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.undo_last_time_log(UUID, BOOLEAN) FROM anon;
 GRANT EXECUTE ON FUNCTION public.undo_last_time_log(UUID, BOOLEAN) TO authenticated;
+
+-- ------------------------------------------
+-- KNOWN GAP: this file does not fully describe the live database.
+-- ------------------------------------------
+-- public.account_members and public.accounts (workspace membership and the
+-- workspace/account records themselves — read by get_user_workspaces above,
+-- by the account_members RLS policies, and by every workspace-scoped query
+-- in the app) exist in production but were never added here; they were
+-- created directly against the database, the same way is_super_admin,
+-- rls_auto_enable and get_user_workspaces were before this pass. This file
+-- is not yet a complete source of truth for a fresh deploy — reconstructing
+-- those two tables and their policies is a deliberate follow-up, not done
+-- as a side effect of this change.
