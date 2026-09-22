@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   full_name TEXT NULL,
   role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('admin', 'member')),
+  is_super_admin BOOLEAN NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -25,7 +26,7 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 CREATE TABLE IF NOT EXISTS public.time_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  account_id TEXT NOT NULL,
+  account_id UUID NULL,
   start_time_seconds INTEGER NOT NULL,
   stop_time_seconds INTEGER NOT NULL,
   is_end_of_day BOOLEAN NOT NULL DEFAULT FALSE,
@@ -44,7 +45,7 @@ CREATE OR REPLACE FUNCTION public.is_admin(user_id UUID)
 RETURNS BOOLEAN AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.profiles
-    WHERE id = user_id AND role = 'admin'
+    WHERE id = user_id AND (role = 'admin' OR is_super_admin = true)
   );
 $$ LANGUAGE sql SECURITY DEFINER SET search_path = public;
 
