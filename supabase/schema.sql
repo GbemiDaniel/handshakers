@@ -81,6 +81,13 @@ CREATE POLICY "Allow authenticated users to read all profiles"
   USING (true);
 
 -- Update: Users can update only their own profile
+-- RLS cannot restrict columns. Without these grants the policy below would let
+-- any signed-in user set their own role='admin' from the browser client.
+-- full_name is the only field the client ever writes (ProfileSettings.jsx).
+REVOKE UPDATE ON public.profiles FROM authenticated;
+REVOKE UPDATE ON public.profiles FROM anon;
+GRANT UPDATE (full_name) ON public.profiles TO authenticated;
+
 CREATE POLICY "Allow users to update own profile"
   ON public.profiles
   FOR UPDATE
