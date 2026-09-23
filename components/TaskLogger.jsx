@@ -7,15 +7,14 @@ import { useLatestGlobalStop, latestGlobalStopFetcher } from "@/hooks/useLatestG
 import { toast } from "sonner";
 import { useAccount } from "@/context/AccountContext";
 import { useAdminStore } from "@/store/useAdminStore";
-import { timeToTotalSeconds, secondsToHHMMString, secondsToSmartDisplay, todayInTeamZone } from "@/utils/timeUtils";
-import { Clock, Lock, ArrowRight, AlertCircle, CheckCircle2, Loader2, Undo2, AlertTriangle, CalendarDays } from "lucide-react";
+import { timeToTotalSeconds, secondsToHHMMString, secondsToSmartDisplay } from "@/utils/timeUtils";
+import { Clock, Lock, ArrowRight, AlertCircle, CheckCircle2, Loader2, Undo2, AlertTriangle } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 export default function TaskLogger({ session, onUpdate }) {
   const [activeTypists, setActiveTypists] = useState([]);
   const [stopTimeInput, setStopTimeInput] = useState("");
   const [isEndOfDay, setIsEndOfDay] = useState(false);
-  const [workDateInput, setWorkDateInput] = useState(() => todayInTeamZone());
   const { activeAccount: contextAccount, canManageAccount } = useAccount();
   const activeAccount = useAdminStore(state => 
     state.workspaces.find(w => w.id === contextAccount?.id)
@@ -49,13 +48,6 @@ export default function TaskLogger({ session, onUpdate }) {
     canManageAccount(activeAccount?.id) ||
     (topEntry.userId === session?.user?.id && topEntry.inCurrentCycle)
   );
-
-  // The next entry opens a new workday when there's nothing before it, the last
-  // day was closed with End of Day, or a new cycle began. Only then does the
-  // logger pick a date — an open day's date is fixed by the database.
-  const startsNewDay = !fetchingLatest && (!topEntry || topEntry.isEndOfDay || !topEntry.inCurrentCycle);
-  const todayDate = todayInTeamZone();
-  const earliestWorkDate = topEntry?.workDate;
 
   // Aggregator State & Math Engine
   const [tasks, setTasks] = useState([]);
@@ -264,19 +256,6 @@ export default function TaskLogger({ session, onUpdate }) {
       return;
     }
 
-    if (startsNewDay) {
-      const dateErr =
-        !workDateInput ? "Please choose the date this workday belongs to."
-        : workDateInput > todayDate ? "A workday can't be dated in the future."
-        : earliestWorkDate && workDateInput < earliestWorkDate ? "A new workday can't be dated before the previous one."
-        : "";
-      if (dateErr) {
-        setFieldError(dateErr);
-        toast.error(dateErr);
-        return;
-      }
-    }
-
     setSubmitting(true);
     try {
       // Race-condition pre-flight: re-read the newest log right before inserting,
@@ -298,7 +277,6 @@ export default function TaskLogger({ session, onUpdate }) {
         start_time_seconds: lockedStartSeconds,
         stop_time_seconds: newStopSeconds,
         is_end_of_day: isEndOfDay,
-        ...(startsNewDay && { work_date: workDateInput }),
       };
       console.log("TRACE 1: TaskLogger Payload:", JSON.parse(JSON.stringify(insertPayload)));
 
@@ -317,8 +295,7 @@ export default function TaskLogger({ session, onUpdate }) {
       );
       setStopTimeInput("");
       setIsEndOfDay(false);
-      setWorkDateInput(todayInTeamZone());
-
+      
       // Refresh global highest stop time for next handoff
       await refreshLatestStop();
 
@@ -466,34 +443,6 @@ export default function TaskLogger({ session, onUpdate }) {
           )}
 
         </div>
-
-        {startsNewDay && (
-          <div className="w-full">
-            <label
-              htmlFor="workDateInput"
-              className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5"
-            >
-              WORKDAY DATE
-            </label>
-            <div className="relative w-full">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
-                <CalendarDays className="w-4 h-4" />
-              </div>
-              <input
-                id="workDateInput"
-                type="date"
-                value={workDateInput}
-                min={earliestWorkDate}
-                max={todayDate}
-                onChange={(e) => { setWorkDateInput(e.target.value); setFieldError(""); }}
-                className="w-full min-w-0 pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium font-mono tabular-nums text-slate-900 dark:text-slate-100 dark:scheme-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-1 transition-all duration-200 ease-in-out"
-              />
-            </div>
-            <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500 leading-snug">
-              This entry starts a new workday. Change the date only if you&apos;re logging a past day.
-            </p>
-          </div>
-        )}
 
         {/* Checkbox: End of Day Flag & Aggregator Trigger */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6">

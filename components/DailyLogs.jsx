@@ -4,9 +4,10 @@ import React, { useState, useEffect } from "react";
 import useSWR from "swr";
 import { supabase } from "@/utils/supabase";
 import { useAccount } from "@/context/AccountContext";
-import { Calendar, RefreshCw, ChevronRight, ChevronDown, Clock, User } from "lucide-react";
-import { secondsToSmartDisplay, secondsToHHMMSSString, formatWorkDate } from "@/utils/timeUtils";
+import { Calendar, RefreshCw, ChevronRight, ChevronDown, Clock, User, CalendarDays } from "lucide-react";
+import { secondsToSmartDisplay, secondsToHHMMSSString, formatWorkDate, todayInTeamZone } from "@/utils/timeUtils";
 import TelemetrySync from "@/components/TelemetrySync";
+import ChangeWorkdayDateModal from "@/components/ChangeWorkdayDateModal";
 
 const getWeekBoundaries = () => {
   const now = new Date();
@@ -57,6 +58,7 @@ function groupLogsIntoShifts(logs, profilesMap, currentUserId) {
         // work_date, not created_at: a day typed in after midnight still
         // belongs to the day it was worked.
         shiftDateTitle: formatWorkDate(log.work_date),
+        workDate: log.work_date,
         dailyTotalSeconds: 0,
         sessions: [],
       };
@@ -130,7 +132,9 @@ const fetcher = async ([_key, accountId]) => {
 
 export default function DailyLogs({ session, refreshKey }) {
   const [expandedShiftKeys, setExpandedShiftKeys] = useState({});
-  const { activeAccount } = useAccount();
+  const [dateEditor, setDateEditor] = useState(null);
+  const { activeAccount, canManageAccount } = useAccount();
+  const canChangeDates = canManageAccount(activeAccount?.id);
 
   const currentUserId = session?.user?.id;
 
@@ -146,6 +150,14 @@ export default function DailyLogs({ session, refreshKey }) {
   const groupedShifts = React.useMemo(() => {
     if (!data || !data.logs || data.logs.length === 0) return [];
     const shifts = groupLogsIntoShifts(data.logs, data.profMap, currentUserId);
+    // The dates an admin may move each day to: no earlier than the day before
+    // it, no later than the day after it or today (set_workday_date's rules).
+    const today = todayInTeamZone();
+    shifts.forEach((shift, i) => {
+      const next = shifts[i + 1]?.workDate;
+      shift.minDate = shifts[i - 1]?.workDate ?? null;
+      shift.maxDate = next && next < today ? next : today;
+    });
     // Reverse so the most recent shift appears at the top
     return [...shifts].reverse();
   }, [data, currentUserId]);
@@ -253,6 +265,25 @@ export default function DailyLogs({ session, refreshKey }) {
                 </div>
               </div>
             ))}
+
+            {canChangeDates && (
+              <div className="flex justify-end pt-1 border-t border-slate-200/70 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setDateEditor({
+                    firstLogId: shift.shiftId,
+                    workDate: shift.workDate,
+                    minDate: shift.minDate,
+                    maxDate: shift.maxDate,
+                    entryCount: shift.sessions.length,
+                  })}
+                  className="inline-flex items-center gap-1.5 mt-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                >
+                  <CalendarDays className="w-3.5 h-3.5" />
+                  Change date
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -378,6 +409,16 @@ export default function DailyLogs({ session, refreshKey }) {
             </div>
           )}
         </div>
+      )}
+
+      {dateEditor && (
+        <ChangeWorkdayDateModal
+          key={dateEditor.firstLogId}
+          day={dateEditor}
+          accountId={activeAccount?.id}
+          onClose={() => setDateEditor(null)}
+          onSaved={() => mutate()}
+        />
       )}
     </div>
   );

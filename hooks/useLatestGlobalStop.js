@@ -10,15 +10,13 @@ const NO_ENTRY = { stopSeconds: 0, latest: null };
  * - `stopSeconds`: where the next handoff starts. 0 when there are no logs, or
  *   when the newest log was created before Monday 00:00 Pacific — it belongs to
  *   the previous cycle and the odometer resets.
- * - `latest`: that newest log's owner, cycle, End of Day flag and workday date,
- *   or null if there are none. The undo button uses it to appear only when undo
- *   would succeed; the logger uses it to know when the next entry starts a new
- *   workday.
+ * - `latest`: that newest log's owner and cycle, or null if there are none. The
+ *   undo button uses it so it only appears when undo would actually succeed.
  *
  * Orders by created_at (chronological), not stop_time_seconds (value), to match
  * what undo_last_time_log treats as the top of the stack.
  *
- * @returns {{ stopSeconds: number, latest: null | { userId: string, inCurrentCycle: boolean, isEndOfDay: boolean, workDate: string } }}
+ * @returns {{ stopSeconds: number, latest: null | { userId: string, inCurrentCycle: boolean } }}
  */
 export const latestGlobalStopFetcher = async (keyArg = []) => {
   const accountId = Array.isArray(keyArg) ? keyArg[1] : keyArg;
@@ -26,7 +24,7 @@ export const latestGlobalStopFetcher = async (keyArg = []) => {
 
   const { data, error } = await supabase
     .from("time_logs")
-    .select("stop_time_seconds, created_at, user_id, is_end_of_day, work_date")
+    .select("stop_time_seconds, created_at, user_id")
     .eq("account_id", accountId)
     .order("created_at", { ascending: false })
     .limit(1);
@@ -43,12 +41,7 @@ export const latestGlobalStopFetcher = async (keyArg = []) => {
 
   return {
     stopSeconds: inCurrentCycle ? latestLog.stop_time_seconds : 0,
-    latest: {
-      userId: latestLog.user_id,
-      inCurrentCycle,
-      isEndOfDay: Boolean(latestLog.is_end_of_day),
-      workDate: latestLog.work_date,
-    },
+    latest: { userId: latestLog.user_id, inCurrentCycle },
   };
 };
 
