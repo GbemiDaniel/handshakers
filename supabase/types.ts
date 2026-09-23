@@ -101,21 +101,6 @@ export type Database = {
         }
         Relationships: []
       }
-      team_settings: {
-        Row: {
-          account_name: string | null
-          id: number
-        }
-        Insert: {
-          account_name?: string | null
-          id: number
-        }
-        Update: {
-          account_name?: string | null
-          id?: number
-        }
-        Relationships: []
-      }
       time_logs: {
         Row: {
           account_id: string | null

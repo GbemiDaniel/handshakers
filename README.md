@@ -42,13 +42,12 @@ The schema lives in `supabase/migrations/`, and those files are the only source 
 
 **Every schema change is a new migration file.** Don't create tables, policies or functions from the Supabase dashboard. A dashboard change doesn't exist in the repo, which is how the old `schema.sql` drifted away from production.
 
-One-time setup for the [Supabase CLI](https://supabase.com/docs/guides/cli):
+The [Supabase CLI](https://supabase.com/docs/guides/cli) is a pinned dev dependency, so `npm install` provides it. One-time setup per machine:
 
 ```bash
 npx supabase login
-npx supabase init          # creates supabase/config.toml; keeps existing migrations
 npx supabase link --project-ref hxaqeerbawxuqvmtcwmv
-npx supabase migration list   # local and remote should both show 20260923000000
+npx supabase migration list   # every version should appear under both Local and Remote
 ```
 
 Making a change:
