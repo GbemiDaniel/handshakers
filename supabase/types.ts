@@ -110,6 +110,7 @@ export type Database = {
           start_time_seconds: number
           stop_time_seconds: number
           user_id: string
+          work_date: string
         }
         Insert: {
           account_id?: string | null
@@ -119,6 +120,7 @@ export type Database = {
           start_time_seconds: number
           stop_time_seconds: number
           user_id: string
+          work_date: string
         }
         Update: {
           account_id?: string | null
@@ -128,6 +130,7 @@ export type Database = {
           start_time_seconds?: number
           stop_time_seconds?: number
           user_id?: string
+          work_date?: string
         }
         Relationships: [
           {

@@ -54,7 +54,7 @@ export function timeToTotalMinutes(timeStr) {
 }
 
 export const fetchTeamData = async (accountId) => {
-  let logsQuery = supabase.from("time_logs").select("id, user_id, start_time_seconds, stop_time_seconds, created_at, is_end_of_day");
+  let logsQuery = supabase.from("time_logs").select("id, user_id, start_time_seconds, stop_time_seconds, created_at, is_end_of_day, work_date");
   let membersQuery = supabase.from("account_members").select("user_id, status");
   
   if (accountId) {

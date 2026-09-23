@@ -10,7 +10,7 @@ import {
   preciseRound,
 } from "@/hooks/usePayoutCalculator";
 import { useAccount } from "@/context/AccountContext";
-import { secondsToHHMMSSString } from "@/utils/timeUtils";
+import { secondsToHHMMSSString, formatWorkDateShort } from "@/utils/timeUtils";
 
 export default function PayoutCalculator({ session }) {
   const { activeAccount } = useAccount();
@@ -40,10 +40,8 @@ export default function PayoutCalculator({ session }) {
     const dailyTotals = {};
 
     myLogs.forEach((log) => {
-      const date = new Date(log.created_at);
-      const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
-      const dateNum = date.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit" });
-      const key = `${dayName} ${dateNum}`;
+      // Group by the workday, matching the timeline — not the save date.
+      const key = formatWorkDateShort(log.work_date);
       const duration = (log.stop_time_seconds || 0) - (log.start_time_seconds || 0);
       if (duration > 0) dailyTotals[key] = (dailyTotals[key] || 0) + duration;
     });

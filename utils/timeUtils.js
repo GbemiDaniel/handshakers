@@ -162,3 +162,46 @@ export function getCurrentCycleBoundaries() {
     dateLabels: labels
   };
 }
+
+// Workdays are dated on one fixed team calendar, matching the database's
+// set_time_log_work_date trigger. Keep the two in sync.
+export const TEAM_TIMEZONE = "Africa/Lagos";
+
+/** Today's date on the team calendar, as "YYYY-MM-DD". */
+export function todayInTeamZone(now = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: TEAM_TIMEZONE }).format(now);
+}
+
+/** Shifts a "YYYY-MM-DD" date by whole days, without timezone drift. */
+export function addDaysToDateString(dateStr, days) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
+/**
+ * Labels a workday: "Today", "Yesterday", or "Tuesday, Sep 22".
+ * work_date is a calendar date, not an instant, so it is formatted in UTC to
+ * stop the viewer's own timezone from shifting it by a day.
+ */
+export function formatWorkDate(dateStr, now = new Date()) {
+  if (!dateStr) return "Unknown Date";
+  const today = todayInTeamZone(now);
+  if (dateStr === today) return "Today";
+  if (dateStr === addDaysToDateString(today, -1)) return "Yesterday";
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", {
+    timeZone: "UTC",
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+/** Short label for exports: "Tue 22/09". */
+export function formatWorkDateShort(dateStr) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  const dayName = date.toLocaleDateString("en-US", { timeZone: "UTC", weekday: "short" });
+  const dateNum = date.toLocaleDateString("en-GB", { timeZone: "UTC", day: "2-digit", month: "2-digit" });
+  return `${dayName} ${dateNum}`;
+}

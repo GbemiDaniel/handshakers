@@ -5,7 +5,7 @@ import useSWR from "swr";
 import { supabase } from "@/utils/supabase";
 import { useAccount } from "@/context/AccountContext";
 import { Calendar, RefreshCw, ChevronRight, ChevronDown, Clock, User } from "lucide-react";
-import { secondsToSmartDisplay, secondsToHHMMSSString } from "@/utils/timeUtils";
+import { secondsToSmartDisplay, secondsToHHMMSSString, formatWorkDate } from "@/utils/timeUtils";
 import TelemetrySync from "@/components/TelemetrySync";
 
 const getWeekBoundaries = () => {
@@ -24,31 +24,6 @@ const getWeekBoundaries = () => {
 
   return { startOfCurrentWeek, startOfLastWeek };
 };
-
-/**
- * Formats ISO timestamp into a full Anchor Date string:
- * "Today", "Yesterday", or "Tuesday, Jul 28"
- */
-function formatAnchorDate(isoString) {
-  if (!isoString) return "Unknown Date";
-  const logDate = new Date(isoString);
-  const today = new Date();
-  const yesterday = new Date();
-  yesterday.setDate(today.getDate() - 1);
-
-  if (logDate.toDateString() === today.toDateString()) {
-    return "Today";
-  }
-  if (logDate.toDateString() === yesterday.toDateString()) {
-    return "Yesterday";
-  }
-
-  return logDate.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "short",
-    day: "numeric",
-  });
-}
 
 /**
  * Sequential Chunking Algorithm:
@@ -79,7 +54,9 @@ function groupLogsIntoShifts(logs, profilesMap, currentUserId) {
       currentShift = {
         shiftId: log.id,
         anchorIso: log.created_at,
-        shiftDateTitle: formatAnchorDate(log.created_at),
+        // work_date, not created_at: a day typed in after midnight still
+        // belongs to the day it was worked.
+        shiftDateTitle: formatWorkDate(log.work_date),
         dailyTotalSeconds: 0,
         sessions: [],
       };
@@ -142,7 +119,7 @@ const fetcher = async ([_key, accountId]) => {
   // 2. Fetch ALL team logs for this account
   const { data: logs, error: logsErr } = await supabase
     .from("time_logs")
-    .select("id, user_id, start_time_seconds, stop_time_seconds, is_end_of_day, created_at")
+    .select("id, user_id, start_time_seconds, stop_time_seconds, is_end_of_day, created_at, work_date")
     .eq("account_id", accountId)
     .order("created_at", { ascending: true });
 

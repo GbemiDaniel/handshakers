@@ -49,8 +49,16 @@ vi.mock("@/utils/supabase", () => ({
 const TEST_ACCOUNT_ID = "test-account-abc123";
 const TEST_USER_ID = "user-owner-1";
 
-function logRow(stopTimeSeconds, createdAt = new Date().toISOString()) {
-  return { stop_time_seconds: stopTimeSeconds, created_at: createdAt, user_id: TEST_USER_ID };
+const TEST_WORK_DATE = "2026-09-22";
+
+function logRow(stopTimeSeconds, createdAt = new Date().toISOString(), isEndOfDay = false) {
+  return {
+    stop_time_seconds: stopTimeSeconds,
+    created_at: createdAt,
+    user_id: TEST_USER_ID,
+    is_end_of_day: isEndOfDay,
+    work_date: TEST_WORK_DATE,
+  };
 }
 
 function resetMocks(stopTimeSeconds = 30000) {
@@ -110,9 +118,20 @@ describe("latestGlobalStopFetcher", () => {
     expect(result.stopSeconds).toBe(30000);
   });
 
-  it("reports who owns the newest log and that it is in the current cycle", async () => {
+  it("reports the newest log's owner, cycle, End of Day flag and workday", async () => {
     const result = await latestGlobalStopFetcher(["latest-global-stop", TEST_ACCOUNT_ID]);
-    expect(result.latest).toEqual({ userId: TEST_USER_ID, inCurrentCycle: true });
+    expect(result.latest).toEqual({
+      userId: TEST_USER_ID,
+      inCurrentCycle: true,
+      isEndOfDay: false,
+      workDate: TEST_WORK_DATE,
+    });
+  });
+
+  it("reports when the newest log closed its workday", async () => {
+    mockLimit.mockResolvedValueOnce({ data: [logRow(30000, undefined, true)], error: null });
+    const result = await latestGlobalStopFetcher(["latest-global-stop", TEST_ACCOUNT_ID]);
+    expect(result.latest.isEndOfDay).toBe(true);
   });
 
   it("resets to 0 but still reports the owner when the newest log is from a previous cycle", async () => {
@@ -120,7 +139,7 @@ describe("latestGlobalStopFetcher", () => {
     mockLimit.mockResolvedValueOnce({ data: [logRow(30000, twoWeeksAgo)], error: null });
     const result = await latestGlobalStopFetcher(["latest-global-stop", TEST_ACCOUNT_ID]);
     expect(result.stopSeconds).toBe(0);
-    expect(result.latest).toEqual({ userId: TEST_USER_ID, inCurrentCycle: false });
+    expect(result.latest).toMatchObject({ userId: TEST_USER_ID, inCurrentCycle: false });
   });
 
   it("returns 0 and no entry when no accountId is provided", async () => {
@@ -155,9 +174,9 @@ describe("latestGlobalStopFetcher", () => {
     expect(mockFrom).toHaveBeenCalledWith("time_logs");
   });
 
-  it("selects stop_time_seconds, created_at and user_id columns", async () => {
+  it("selects the columns the logger and undo button depend on", async () => {
     await latestGlobalStopFetcher(["latest-global-stop", TEST_ACCOUNT_ID]);
-    expect(mockSelect).toHaveBeenCalledWith("stop_time_seconds, created_at, user_id");
+    expect(mockSelect).toHaveBeenCalledWith("stop_time_seconds, created_at, user_id, is_end_of_day, work_date");
   });
 
   it("filters by account_id", async () => {
