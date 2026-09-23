@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from "react";
 import BaseCard from "./BaseCard";
 import { supabase } from "@/utils/supabase";
-import { useLatestGlobalStop } from "@/hooks/useLatestGlobalStop";
+import { useLatestGlobalStop, latestGlobalStopFetcher } from "@/hooks/useLatestGlobalStop";
 import { toast } from "sonner";
 import { useAccount } from "@/context/AccountContext";
 import { useAdminStore } from "@/store/useAdminStore";
-import { timeToTotalSeconds, secondsToHHMMString, secondsToSmartDisplay, getCurrentCycleBoundaries } from "@/utils/timeUtils";
+import { timeToTotalSeconds, secondsToHHMMString, secondsToSmartDisplay } from "@/utils/timeUtils";
 import { Clock, Lock, ArrowRight, AlertCircle, CheckCircle2, Loader2, Undo2, AlertTriangle } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -15,7 +15,7 @@ export default function TaskLogger({ session, onUpdate }) {
   const [activeTypists, setActiveTypists] = useState([]);
   const [stopTimeInput, setStopTimeInput] = useState("");
   const [isEndOfDay, setIsEndOfDay] = useState(false);
-  const { activeAccount: contextAccount } = useAccount();
+  const { activeAccount: contextAccount, canManageAccount } = useAccount();
   const activeAccount = useAdminStore(state => 
     state.workspaces.find(w => w.id === contextAccount?.id)
   ) || contextAccount;
@@ -32,13 +32,22 @@ export default function TaskLogger({ session, onUpdate }) {
   const poolLimitHours = activeAccount?.weekly_pool_hours ?? 0;
   const MAX_POOL_SECONDS = poolLimitHours * 3600;
 
-  // Shared SWR hook: auto-polls the latest global stop time (in seconds) every 2s.
-  // Shared cache key with FuelGauge — mutating here updates both components.
+  // Polls the workspace's newest log every 2s: the locked start time, plus who
+  // owns that log so undo is only offered when it would succeed.
   const {
-    data: lockedStartSeconds = 0,
+    data: latestEntry,
     mutate: refreshLatestStop,
     isLoading: fetchingLatest,
   } = useLatestGlobalStop(activeAccount?.id);
+  const lockedStartSeconds = latestEntry?.stopSeconds ?? 0;
+
+  // Mirrors undo_last_time_log's rules; the RPC stays the authority, this only
+  // avoids offering an action that would be refused.
+  const topEntry = latestEntry?.latest;
+  const canUndo = Boolean(topEntry) && (
+    canManageAccount(activeAccount?.id) ||
+    (topEntry.userId === session?.user?.id && topEntry.inCurrentCycle)
+  );
 
   // Aggregator State & Math Engine
   const [tasks, setTasks] = useState([]);
@@ -249,35 +258,12 @@ export default function TaskLogger({ session, onUpdate }) {
 
     setSubmitting(true);
     try {
-      // Race Condition Pre-Flight: Query DB for the chronologically latest log
-      // (ordered by created_at to match useLatestGlobalStop's corrected query)
-      const { data: latestCheck, error: checkErr } = await supabase
-        .from("time_logs")
-        .select("stop_time_seconds, created_at")
-        .eq("account_id", activeAccount?.id)
-        .order("created_at", { ascending: false })
-        .limit(1);
+      // Race-condition pre-flight: re-read the newest log right before inserting,
+      // in case someone logged since the last 2s poll.
+      const fresh = await latestGlobalStopFetcher(["latest-global-stop", activeAccount?.id]);
 
-      if (checkErr) throw checkErr;
-
-      // Extract the absolute seconds from the DB, applying the cycle boundary check
-      let latestDbSeconds = 0;
-      if (latestCheck && latestCheck.length > 0) {
-        const latestLog = latestCheck[0];
-        const { pacificMidnightUTC } = getCurrentCycleBoundaries();
-        const logCreatedAt = new Date(latestLog.created_at).getTime();
-
-        // If the latest log is from the current cycle, use its stop_time_seconds
-        // Otherwise, it resets to 0, exactly like useLatestGlobalStop
-        if (logCreatedAt >= pacificMidnightUTC) {
-          latestDbSeconds = latestLog.stop_time_seconds;
-        }
-      }
-
-      // Abort if timeline collision detected
-      if (latestDbSeconds > lockedStartSeconds) {
-        // Optimistically update SWR cache with the collision value (in seconds)
-        refreshLatestStop(latestDbSeconds, { revalidate: false });
+      if (fresh.stopSeconds > lockedStartSeconds) {
+        refreshLatestStop(fresh, { revalidate: false });
         const collisionErr = "Timeline collision. Another user just logged time. Please refresh.";
         toast.error(collisionErr);
         setSubmitting(false);
@@ -501,7 +487,7 @@ export default function TaskLogger({ session, onUpdate }) {
           )}
         </button>
 
-        {/* Undo — available to everyone; the RPC decides whether it is allowed */}
+        {(canUndo || rollingBack) && (
         <div className="pt-2 flex justify-center border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
@@ -519,6 +505,7 @@ export default function TaskLogger({ session, onUpdate }) {
               )}
             </button>
         </div>
+        )}
       </form>
 
       {/* Tailwind CSS Modal Overlay */}

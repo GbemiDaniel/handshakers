@@ -47,6 +47,11 @@ vi.mock("@/utils/supabase", () => ({
 // ---------------------------------------------------------------------------
 
 const TEST_ACCOUNT_ID = "test-account-abc123";
+const TEST_USER_ID = "user-owner-1";
+
+function logRow(stopTimeSeconds, createdAt = new Date().toISOString()) {
+  return { stop_time_seconds: stopTimeSeconds, created_at: createdAt, user_id: TEST_USER_ID };
+}
 
 function resetMocks(stopTimeSeconds = 30000) {
   vi.clearAllMocks();
@@ -56,7 +61,7 @@ function resetMocks(stopTimeSeconds = 30000) {
   mockEq.mockReturnValue({ order: mockOrder });
   mockOrder.mockReturnValue({ limit: mockLimit });
   mockLimit.mockResolvedValue({
-    data: stopTimeSeconds !== null ? [{ stop_time_seconds: stopTimeSeconds }] : [],
+    data: stopTimeSeconds !== null ? [logRow(stopTimeSeconds)] : [],
     error: null,
   });
   mockFrom.mockReturnValue({
@@ -98,28 +103,41 @@ describe("latestGlobalStopFetcher", () => {
     latestGlobalStopFetcher = mod.latestGlobalStopFetcher;
   });
 
-  it("returns the highest stop_time_seconds value directly", async () => {
+  it("returns the newest log's stop_time_seconds directly", async () => {
     // Pass a key array with accountId, matching how SWR invokes the fetcher
     const result = await latestGlobalStopFetcher(["latest-global-stop", TEST_ACCOUNT_ID]);
-    // Hook returns raw seconds from DB — no conversion
-    expect(result).toBe(30000);
+    // Raw seconds from DB — no conversion
+    expect(result.stopSeconds).toBe(30000);
   });
 
-  it("returns 0 when no accountId is provided", async () => {
+  it("reports who owns the newest log and that it is in the current cycle", async () => {
+    const result = await latestGlobalStopFetcher(["latest-global-stop", TEST_ACCOUNT_ID]);
+    expect(result.latest).toEqual({ userId: TEST_USER_ID, inCurrentCycle: true });
+  });
+
+  it("resets to 0 but still reports the owner when the newest log is from a previous cycle", async () => {
+    const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 3600 * 1000).toISOString();
+    mockLimit.mockResolvedValueOnce({ data: [logRow(30000, twoWeeksAgo)], error: null });
+    const result = await latestGlobalStopFetcher(["latest-global-stop", TEST_ACCOUNT_ID]);
+    expect(result.stopSeconds).toBe(0);
+    expect(result.latest).toEqual({ userId: TEST_USER_ID, inCurrentCycle: false });
+  });
+
+  it("returns 0 and no entry when no accountId is provided", async () => {
     const result = await latestGlobalStopFetcher();
-    expect(result).toBe(0);
+    expect(result).toEqual({ stopSeconds: 0, latest: null });
   });
 
-  it("returns 0 when no time logs exist", async () => {
+  it("returns 0 and no entry when no time logs exist", async () => {
     mockLimit.mockResolvedValueOnce({ data: [], error: null });
     const result = await latestGlobalStopFetcher(["latest-global-stop", TEST_ACCOUNT_ID]);
-    expect(result).toBe(0);
+    expect(result).toEqual({ stopSeconds: 0, latest: null });
   });
 
-  it("returns 0 when data is null", async () => {
+  it("returns 0 and no entry when data is null", async () => {
     mockLimit.mockResolvedValueOnce({ data: null, error: null });
     const result = await latestGlobalStopFetcher(["latest-global-stop", TEST_ACCOUNT_ID]);
-    expect(result).toBe(0);
+    expect(result).toEqual({ stopSeconds: 0, latest: null });
   });
 
   it("throws on Supabase error so SWR can handle retries", async () => {
@@ -137,9 +155,9 @@ describe("latestGlobalStopFetcher", () => {
     expect(mockFrom).toHaveBeenCalledWith("time_logs");
   });
 
-  it("selects stop_time_seconds and created_at columns", async () => {
+  it("selects stop_time_seconds, created_at and user_id columns", async () => {
     await latestGlobalStopFetcher(["latest-global-stop", TEST_ACCOUNT_ID]);
-    expect(mockSelect).toHaveBeenCalledWith("stop_time_seconds, created_at");
+    expect(mockSelect).toHaveBeenCalledWith("stop_time_seconds, created_at, user_id");
   });
 
   it("filters by account_id", async () => {
@@ -173,40 +191,36 @@ describe("useLatestGlobalStop hook", () => {
     const { result } = renderHook(() => useLatestGlobalStop(TEST_ACCOUNT_ID), { wrapper });
 
     await waitFor(() => {
-      // Hook returns raw seconds from DB — no conversion
-      expect(result.current.data).toBe(45000);
+      // Raw seconds from DB — no conversion
+      expect(result.current.data?.stopSeconds).toBe(45000);
     });
     expect(result.current.isLoading).toBe(false);
   });
 
-  it("returns 0 default when destructured before data loads", () => {
+  it("falls back to a 0 start time before data loads", () => {
     const wrapper = createTestWrapper();
     const { result } = renderHook(
-      () => {
-        const { data = 0 } = useLatestGlobalStop(TEST_ACCOUNT_ID);
-        return data;
-      },
+      () => useLatestGlobalStop(TEST_ACCOUNT_ID).data?.stopSeconds ?? 0,
       { wrapper }
     );
 
-    // On first synchronous render, before fetch resolves
-    // The default destructuring should provide 0
-    expect(typeof result.current).toBe("number");
+    // On first synchronous render, before fetch resolves (mirrors TaskLogger)
+    expect(result.current).toBe(0);
   });
 
   it("exposes a mutate function for immediate cache updates", async () => {
     const wrapper = createTestWrapper();
     const { result } = renderHook(() => useLatestGlobalStop(TEST_ACCOUNT_ID), { wrapper });
 
-    // Hook returns raw seconds from DB (45000)
-    await waitFor(() => expect(result.current.data).toBe(45000));
+    await waitFor(() => expect(result.current.data?.stopSeconds).toBe(45000));
 
-    // Optimistic update (simulates collision handler in TaskLogger, in seconds)
+    // Optimistic update (simulates the collision handler in TaskLogger)
+    const collided = { stopSeconds: 59940, latest: { userId: "someone-else", inCurrentCycle: true } };
     await act(async () => {
-      await result.current.mutate(59940, { revalidate: false });
+      await result.current.mutate(collided, { revalidate: false });
     });
 
-    expect(result.current.data).toBe(59940);
+    expect(result.current.data).toEqual(collided);
   });
 });
 
