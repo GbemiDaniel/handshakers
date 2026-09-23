@@ -8,7 +8,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAccount } from "@/context/AccountContext";
 import WorkspaceManagerModal from "./WorkspaceManagerModal";
 import ManageTeamModal from "./ManageTeamModal";
-import { Plus, Users, LayoutDashboard, Calculator } from "lucide-react";
+import EditCapacityModal from "./EditCapacityModal";
+import { Plus, Users, Gauge } from "lucide-react";
 import Logo from "./Logo";
 import ProfileSettings from "./ProfileSettings";
 import AccountSwitcher from "./AccountSwitcher";
@@ -20,7 +21,9 @@ export default function Header({ session, onSignOut }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isManagerModalOpen, setIsManagerModalOpen] = useState(false);
   const [isManageTeamModalOpen, setIsManageTeamModalOpen] = useState(false);
-  const { isSuperAdmin, activeAccount, refreshAccounts } = useAccount();
+  const [isEditCapacityOpen, setIsEditCapacityOpen] = useState(false);
+  const { isSuperAdmin, canManageAccount, activeAccount, refreshAccounts } = useAccount();
+  const canManageActive = canManageAccount(activeAccount?.id);
 
   const fetchName = useCallback(async () => {
     if (session?.user?.id) {
@@ -143,7 +146,7 @@ export default function Header({ session, onSignOut }) {
                 <span>Profile Settings</span>
               </button>
 
-              {isSuperAdmin && (
+              {canManageActive && (
                 <>
                   <button
                     type="button"
@@ -156,6 +159,22 @@ export default function Header({ session, onSignOut }) {
                     <Users className="w-5 h-5 shrink-0" />
                     <span>Manage Team</span>
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setIsEditCapacityOpen(true);
+                    }}
+                    className="flex items-center gap-4 px-6 py-3 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors w-full focus:outline-none"
+                  >
+                    <Gauge className="w-5 h-5 shrink-0" />
+                    <span>Edit Capacity</span>
+                  </button>
+                </>
+              )}
+
+              {isSuperAdmin && (
+                <>
                   <button
                     type="button"
                     onClick={() => {
@@ -206,6 +225,12 @@ export default function Header({ session, onSignOut }) {
         isOpen={isManageTeamModalOpen}
         onClose={() => setIsManageTeamModalOpen(false)}
         activeAccount={activeAccount}
+      />
+
+      <EditCapacityModal
+        isOpen={isEditCapacityOpen}
+        onClose={() => setIsEditCapacityOpen(false)}
+        workspace={activeAccount}
       />
     </>
   );

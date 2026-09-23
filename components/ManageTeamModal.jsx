@@ -3,9 +3,19 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/utils/supabase";
 import { toast } from "sonner";
-import { X, Users, UserPlus, Trash2, Loader2, User, Shield, RefreshCw, AlertTriangle } from "lucide-react";
+import { useAccount } from "@/context/AccountContext";
+import { X, Users, UserPlus, Trash2, Loader2, User, Shield, ShieldPlus, ShieldMinus, RefreshCw, AlertTriangle } from "lucide-react";
+
+// A write blocked by RLS returns no error and no rows, so success must be
+// confirmed by the rows that came back.
+function assertChanged(data) {
+  if (!data || data.length === 0) {
+    throw new Error("You don't have permission to change this member.");
+  }
+}
 
 export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
+  const { isSuperAdmin } = useAccount();
   const [members, setMembers] = useState([]);
   const [availableProfiles, setAvailableProfiles] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState("");
@@ -33,7 +43,7 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
 
       const { data: profileRows, error: profErr } = await supabase
         .from("profiles")
-        .select("id, full_name, role");
+        .select("id, full_name, is_super_admin");
 
       if (profErr) throw profErr;
 
@@ -48,6 +58,7 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
         role: m.role || "member",
         status: m.status || "active",
         full_name: profileMap[m.user_id]?.full_name || `User (${m.user_id.slice(0, 6)})`,
+        is_super_admin: profileMap[m.user_id]?.is_super_admin === true,
       }));
 
       setMembers(formattedMembers);
@@ -105,12 +116,14 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
     if (!memberToRemove) return;
     setIsActionLoading(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("account_members")
         .update({ status: 'inactive' })
-        .eq("id", memberToRemove.id);
+        .eq("id", memberToRemove.id)
+        .select("id");
 
       if (error) throw error;
+      assertChanged(data);
 
       toast.success(`${memberToRemove.full_name} removed from workspace.`);
       fetchMembers();
@@ -125,17 +138,45 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
   const handleReactivateMember = async (memberId, memberName) => {
     setIsActionLoading(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("account_members")
         .update({ status: 'active' })
-        .eq("id", memberId);
+        .eq("id", memberId)
+        .select("id");
 
       if (error) throw error;
+      assertChanged(data);
 
       toast.success(`${memberName} has been reactivated.`);
       fetchMembers();
     } catch (err) {
       toast.error(`Failed to reactivate member: ${err.message}`);
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  // Super admin only; the guard_workspace_lead_changes trigger enforces it.
+  const handleSetRole = async (member, role) => {
+    setIsActionLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("account_members")
+        .update({ role })
+        .eq("id", member.id)
+        .select("id");
+
+      if (error) throw error;
+      assertChanged(data);
+
+      toast.success(
+        role === "admin"
+          ? `${member.full_name} is now a lead of ${accountName}.`
+          : `${member.full_name} is no longer a lead.`
+      );
+      fetchMembers();
+    } catch (err) {
+      toast.error(`Failed to update role: ${err.message}`);
     } finally {
       setIsActionLoading(false);
     }
@@ -260,7 +301,12 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
                 </div>
               ) : (
                 <div className="overflow-y-auto max-h-[40vh] p-4 space-y-2.5 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-xl shadow-xs">
-                  {displayedMembers.map((member) => (
+                  {displayedMembers.map((member) => {
+                    const roleLabel = member.is_super_admin ? "Super admin" : member.role === "admin" ? "Lead" : "Member";
+                    // Only the super admin can deactivate or remove a lead.
+                    const isProtectedLead = member.role === "admin" && !isSuperAdmin;
+                    const canToggleLead = isSuperAdmin && member.status === "active" && !member.is_super_admin;
+                    return (
                     <div
                       key={member.id}
                       className={`flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 border rounded-xl transition-all gap-3 ${member.status === 'inactive' ? 'border-dashed border-slate-200 dark:border-slate-700 opacity-60 grayscale-[0.5]' : 'border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
@@ -286,12 +332,28 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
                             Inactive
                           </span>
                         )}
-                        <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 capitalize">
+                        <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                           <Shield className="w-2.5 h-2.5" />
-                          {member.role}
+                          {roleLabel}
                         </span>
 
-                        {member.status === 'inactive' ? (
+                        {canToggleLead && (
+                          <button
+                            type="button"
+                            onClick={() => handleSetRole(member, member.role === "admin" ? "member" : "admin")}
+                            disabled={isActionLoading}
+                            title={member.role === "admin" ? "Remove lead" : "Make lead"}
+                            aria-label={member.role === "admin" ? `Remove ${member.full_name} as lead` : `Make ${member.full_name} a lead`}
+                            className="flex items-center gap-1.5 h-8 px-2 sm:px-2.5 rounded-lg text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition-colors duration-200 ease-in-out disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                          >
+                            {member.role === "admin"
+                              ? <ShieldMinus className="w-3.5 h-3.5" />
+                              : <ShieldPlus className="w-3.5 h-3.5" />}
+                            <span className="hidden sm:inline">{member.role === "admin" ? "Remove lead" : "Make lead"}</span>
+                          </button>
+                        )}
+
+                        {isProtectedLead ? null : member.status === 'inactive' ? (
                           <button
                             type="button"
                             onClick={() => handleReactivateMember(member.id, member.full_name)}
@@ -315,7 +377,8 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
                         )}
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

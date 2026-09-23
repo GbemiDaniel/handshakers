@@ -71,7 +71,7 @@ function TaskersToolbar({ searchQuery, setSearchQuery, filterStatus, setFilterSt
   );
 }
 
-function WorkspaceCard({ account, isSuperAdmin, router, onDeleteRequest, onEditCapacityRequest }) {
+function WorkspaceCard({ account, isSuperAdmin, canManage, router, onDeleteRequest, onEditCapacityRequest }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const workspaceName = account.account_name || account.name || "Workspace";
   const initials = workspaceName.substring(0, 2).toUpperCase();
@@ -90,7 +90,7 @@ function WorkspaceCard({ account, isSuperAdmin, router, onDeleteRequest, onEditC
         </div>
         
         {/* Dropdown Menu */}
-        {isSuperAdmin && (
+        {canManage && (
           <div className="relative">
             <button
               onClick={(e) => {
@@ -116,16 +116,18 @@ function WorkspaceCard({ account, isSuperAdmin, router, onDeleteRequest, onEditC
                   >
                     Edit Capacity
                   </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsMenuOpen(false);
-                      onDeleteRequest(account);
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                  >
-                    Delete Workspace
-                  </button>
+                  {isSuperAdmin && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsMenuOpen(false);
+                        onDeleteRequest(account);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    >
+                      Delete Workspace
+                    </button>
+                  )}
                 </div>
               </>
             )}
@@ -136,7 +138,7 @@ function WorkspaceCard({ account, isSuperAdmin, router, onDeleteRequest, onEditC
       {/* Middle Row: Badges */}
       <div className="flex items-center gap-2 my-4 w-full">
         <span className="text-[10px] tracking-wider uppercase font-medium px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20">
-          {isSuperAdmin ? "Super Admin" : "Member"}
+          {isSuperAdmin ? "Super Admin" : canManage ? "Lead" : "Member"}
         </span>
         <span className="text-xs text-slate-500 font-medium">
           &bull; 2 Members
@@ -326,7 +328,7 @@ const TaskerMobileCard = React.memo(({
 
 function Overview({ session }) {
   const router = useRouter();
-  const { isSuperAdmin } = useAccount(); // Keep for now
+  const { isSuperAdmin, canManageAccount } = useAccount();
   
   // Zustand Store
   const workspaces = useAdminStore(state => state.workspaces);
@@ -555,11 +557,12 @@ function Overview({ session }) {
         {activeTab === "workspaces" && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {workspaces.map((account) => (
-              <WorkspaceCard 
-                key={account.id} 
-                account={account} 
-                isSuperAdmin={isSuperAdmin} 
-                router={router} 
+              <WorkspaceCard
+                key={account.id}
+                account={account}
+                isSuperAdmin={isSuperAdmin}
+                canManage={canManageAccount(account.id)}
+                router={router}
                 onDeleteRequest={handleDeleteRequest}
                 onEditCapacityRequest={handleEditCapacityRequest}
               />

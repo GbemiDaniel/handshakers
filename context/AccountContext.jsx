@@ -9,6 +9,7 @@ export const AccountContext = createContext({
   activeAccount: null,
   setActiveAccount: () => {},
   isSuperAdmin: false,
+  canManageAccount: () => false,
   accounts: [],
   isLoadingAccounts: false,
   refreshAccounts: () => {},
@@ -54,6 +55,40 @@ export function AccountProvider({ children, session }) {
     fetchSuperAdminStatus();
   }, [userId]);
 
+  // Workspaces this user leads. Only decides which controls to show — the
+  // database enforces the same rule (is_workspace_admin) on every write.
+  const [ledAccountIds, setLedAccountIds] = useState(() => new Set());
+
+  useEffect(() => {
+    async function fetchLedWorkspaces() {
+      if (!userId) {
+        setLedAccountIds(new Set());
+        return;
+      }
+      const { data, error } = await supabase
+        .from("account_members")
+        .select("account_id, status")
+        .eq("user_id", userId)
+        .eq("role", "admin");
+
+      if (error) {
+        console.error("Error fetching led workspaces:", error);
+        setLedAccountIds(new Set());
+        return;
+      }
+      setLedAccountIds(new Set(
+        (data || []).filter((m) => (m.status ?? "active") === "active").map((m) => m.account_id)
+      ));
+    }
+
+    fetchLedWorkspaces();
+  }, [userId]);
+
+  const canManageAccount = useCallback(
+    (accountId) => isSuperAdmin || (accountId != null && ledAccountIds.has(accountId)),
+    [isSuperAdmin, ledAccountIds]
+  );
+
   // Subscribe to Zustand store for workspaces
   const workspaces = useAdminStore((state) => state.workspaces);
   const isLoadingAccounts = useAdminStore((state) => state.isLoadingWorkspaces);
@@ -95,6 +130,7 @@ export function AccountProvider({ children, session }) {
     activeAccount,
     setActiveAccount,
     isSuperAdmin,
+    canManageAccount,
     accounts: workspaces,
     isLoadingAccounts,
     refreshAccounts,

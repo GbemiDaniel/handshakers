@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAccount } from "@/context/AccountContext";
 import WorkspaceManagerModal from "./WorkspaceManagerModal";
 import ManageTeamModal from "./ManageTeamModal";
-import { Building, ChevronDown, Check, Loader2, Sparkles, Plus, Users, LayoutDashboard, Folder } from "lucide-react";
+import EditCapacityModal from "./EditCapacityModal";
+import { Building, ChevronDown, Check, Sparkles, Plus, Users, LayoutDashboard, Folder, Gauge } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import TelemetrySync from "@/components/TelemetrySync";
 
@@ -15,6 +16,7 @@ export default function AccountSwitcher({ isMobile = false }) {
     activeAccount,
     accounts,
     isSuperAdmin,
+    canManageAccount,
     isLoadingAccounts,
     refreshAccounts,
   } = useAccount();
@@ -23,6 +25,8 @@ export default function AccountSwitcher({ isMobile = false }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isManagerModalOpen, setIsManagerModalOpen] = useState(false);
   const [isManageTeamModalOpen, setIsManageTeamModalOpen] = useState(false);
+  const [isEditCapacityOpen, setIsEditCapacityOpen] = useState(false);
+  const canManageActive = canManageAccount(activeAccount?.id);
   const dropdownRef = useRef(null);
 
   // Close dropdown on outside click
@@ -160,8 +164,8 @@ export default function AccountSwitcher({ isMobile = false }) {
               )}
             </AnimatePresence>
 
-            {/* Super Admin Actions (Only renders if isSuperAdmin is true and not mobile) */}
-            {!isMobile && isSuperAdmin && (
+            {/* Workspace admin actions: the super admin, or this workspace's lead */}
+            {!isMobile && canManageActive && (
               <div className="border-t border-slate-100 dark:border-slate-800 pt-1 mt-1 space-y-0.5">
                 <button
                   type="button"
@@ -175,6 +179,22 @@ export default function AccountSwitcher({ isMobile = false }) {
                   <span>Manage Team</span>
                 </button>
 
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                    setIsEditCapacityOpen(true);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors duration-150 ease-in-out text-left focus:outline-none focus-visible:bg-slate-100 dark:focus-visible:bg-slate-800"
+                >
+                  <Gauge className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                  <span>Edit Capacity</span>
+                </button>
+              </div>
+            )}
+
+            {!isMobile && isSuperAdmin && (
+              <div className="border-t border-slate-100 dark:border-slate-800 pt-1 mt-1 space-y-0.5">
                 <button
                   type="button"
                   onClick={() => {
@@ -220,6 +240,12 @@ export default function AccountSwitcher({ isMobile = false }) {
         isOpen={isManageTeamModalOpen}
         onClose={() => setIsManageTeamModalOpen(false)}
         activeAccount={activeAccount}
+      />
+
+      <EditCapacityModal
+        isOpen={isEditCapacityOpen}
+        onClose={() => setIsEditCapacityOpen(false)}
+        workspace={activeAccount}
       />
     </>
   );
