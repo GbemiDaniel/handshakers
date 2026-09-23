@@ -303,8 +303,6 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
                 <div className="overflow-y-auto max-h-[40vh] p-4 space-y-2.5 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-xl shadow-xs">
                   {displayedMembers.map((member) => {
                     const roleLabel = member.is_super_admin ? "Super admin" : member.role === "admin" ? "Lead" : "Member";
-                    // Only the super admin can deactivate or remove a lead.
-                    const isProtectedLead = member.role === "admin" && !isSuperAdmin;
                     const canToggleLead = isSuperAdmin && member.status === "active" && !member.is_super_admin;
                     return (
                     <div
@@ -353,7 +351,7 @@ export default function ManageTeamModal({ isOpen, onClose, activeAccount }) {
                           </button>
                         )}
 
-                        {isProtectedLead ? null : member.status === 'inactive' ? (
+                        {member.status === 'inactive' ? (
                           <button
                             type="button"
                             onClick={() => handleReactivateMember(member.id, member.full_name)}

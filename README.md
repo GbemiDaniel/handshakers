@@ -60,8 +60,8 @@ npx supabase gen types typescript --linked > supabase/types.ts
 
 Access rules in brief:
 
-- **Super admin** (`profiles.is_super_admin`): full access to every workspace.
-- **Workspace lead** (`account_members.role = 'admin'`): admin powers inside their own workspace only (capacity, members, editing and undoing logs).
+- **Super admin** (`profiles.is_super_admin`): full access to every workspace, and the only one who adds or removes members and appoints leads.
+- **Workspace lead** (`account_members.role = 'admin'`): inside their own workspace only, can edit capacity and edit, delete or override-undo logs.
 - **Member**: reads and logs their own time within their own workspaces, and can undo their own entry while it's still the latest.
 
 Anything the UI hides must also be enforced by a policy, because the browser can query Supabase directly.

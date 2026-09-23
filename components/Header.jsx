@@ -148,17 +148,19 @@ export default function Header({ session, onSignOut }) {
 
               {canManageActive && (
                 <>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      setIsManageTeamModalOpen(true);
-                    }}
-                    className="flex items-center gap-4 px-6 py-3 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors w-full focus:outline-none"
-                  >
-                    <Users className="w-5 h-5 shrink-0" />
-                    <span>Manage Team</span>
-                  </button>
+                  {isSuperAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        setIsManageTeamModalOpen(true);
+                      }}
+                      className="flex items-center gap-4 px-6 py-3 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors w-full focus:outline-none"
+                    >
+                      <Users className="w-5 h-5 shrink-0" />
+                      <span>Manage Team</span>
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => {
